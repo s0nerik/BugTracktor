@@ -95,9 +95,11 @@ paths:
           schema:
             $ref: "#/definitions/Project"
   /projects/{projectId}:
+    x-swagger-router-controller: projects
     parameters:
       - $ref: "#/parameters/projectIdParam"
     get:
+      operationId: getProject
       description: |
         Gets a project with a given identifier.
       responses:

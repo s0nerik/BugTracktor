@@ -50,12 +50,12 @@ GLOBAL.tables = {
       return knex.insert(without_fields(project, ["id", "members", "issues"]))
                 .into(tables.projects.name)
                 .then(function(ids) { return tables.projects.get(ids[0]) })
-                .then(function(data) { return without_nulls(data[0], true) });
+                .then(function(data) { return without_nulls(data, true) });
     },
     get: function(id) {
       var query;
       if (id) {
-        query = knex.select().where("id", id).from(tables.projects.name);
+        query = knex.first().where("id", id).from(tables.projects.name);
       } else {
         query = knex.select().from(tables.projects.name);
       }
