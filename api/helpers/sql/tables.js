@@ -1,251 +1,211 @@
+/**
+ * Delete all null (or undefined) properties from an object.
+ * Set 'recurse' to true if you also want to delete properties in nested objects.
+ */
+function delete_null_properties(obj, recurse) {
+    for (var i in obj) {
+        if (obj[i] === null) {
+            delete obj[i];
+        } else if (recurse && typeof obj[i] === 'object') {
+            delete_null_properties(obj[i], recurse);
+        }
+    }
+}
+
+/**
+ * Delete all null (or undefined) properties from an object.
+ * Set 'recurse' to true if you also want to delete properties in nested objects.
+ */
+function without_nulls(obj, recurse) {
+  delete_null_properties(obj, recurse);
+  return obj;
+}
+
+/**
+ * Delete all specified fields
+ */
+function without_fields(obj, fields) {
+  var newObj = {}
+  for (var key in obj) {
+    if (fields.indexOf(key) < 0) {
+      newObj[key] = obj[key];
+    }
+  }
+  return newObj;
+}
+
 GLOBAL.tables = {
   projects: {
     name: "Projects",
-    fields: {
-      id: "id",
-      name: "name",
-      short_description: "short_description",
-      full_description: "full_description",
-    },
-    foreignFields: {
-      members: "members",
-      issues: "issues",
-    },
+    fields: ["id", "name", "short_description", "full_description"],
+    foreignFields: ["members", "issues"],
     init: function (table) {
-      var fields = tables.projects.fields;
-
-      table.increments(fields.id);
-      table.string(fields.name);
-      table.string(fields.short_description);
-      table.string(fields.full_description);
+      table.increments("id");
+      table.string("name");
+      table.string("short_description");
+      table.string("full_description");
       table.timestamps();
     },
     new: function(project) {
-      return knex.insert(utils.without_foreign_fields(this.projects, project)).into(this.projects.name);
+      return knex.insert(without_fields(project, ["id", "members", "issues"]))
+                .into(tables.projects.name)
+                .then(function(ids) { return tables.projects.get(ids[0]) })
+                .then(function(data) { return without_nulls(data[0], true) });
     },
     get: function(id) {
+      var query;
       if (id) {
-        return knex.select().where(this.projects.fields.id, id).from(this.projects.name)[0];
+        query = knex.select().where("id", id).from(tables.projects.name);
       } else {
-        return knex.select().from(this.projects.name);
+        query = knex.select().from(tables.projects.name);
       }
+      return query.then(function (data) { return without_nulls(data, true) });
     }
   },
   issue_types: {
     name: "Issue_Types",
-    fields: {
-      id: "id",
-      name: "name",
-      description: "description",
-    },
+    fields: ["id", "name", "description"],
     init: function (table) {
-      var fields = tables.issue_types.fields;
-
-      table.increments(fields.id);
-      table.string(fields.name);
-      table.string(fields.description);
+      table.increments("id");
+      table.string("name");
+      table.string("description");
       table.timestamps();
     }
   },
   issues: {
     name: "Issues",
-    fields: {
-      id: "id",
-      project_id: "project_id",
-      type_id: "type_id",
-      short_description: "short_description",
-      full_description: "full_description",
-      creation_date: "creation_date"
-    },
-    foreignFields: {
-      project: "project",
-      type: "type",
-      history: "history"
-    },
+    fields: ["id", "project_id", "type_id", "short_description", "full_description", "creation_date"],
+    foreignFields: ["project", "type", "history"],
     init: function (table) {
-      var fields = tables.issues.fields;
+      table.increments("id");
 
-      table.increments(fields.id);
-
-      table.integer(fields.project_id)
-           .references(tables.projects.fields.id)
+      table.integer("project_id")
+           .references("id")
            .inTable(tables.projects.name);
 
-      table.integer(fields.type_id)
-           .references(tables.issue_types.fields.id)
+      table.integer("type_id")
+           .references("id")
            .inTable(tables.issue_types.name);
 
-      table.date(fields.creation_date);
-      table.string(fields.short_description);
-      table.string(fields.full_description);
+      table.date("creation_date");
+      table.string("short_description");
+      table.string("full_description");
 
       table.timestamps();
     }
   },
   issue_changes: {
     name: "Issue_Changes",
-    fields: {
-      issue_id: "issue_id",
-      date: "date",
-      description: "description",
-      change_type_id: "change_type_id",
-      author_id: "author_id",
-      creation_date: "creation_date"
-    },
-    foreignFields: {
-      project: "project",
-      type: "type",
-      history: "history"
-    },
+    fields: ["issue_id", "date", "description", "change_type_id", "author_id", "creation_date"],
+    foreignFields: ["project", "type", "history"],
     init: function (table) {
-      var fields = tables.issue_changes.fields;
-
-      table.integer(fields.issue_id)
-           .references(tables.issues.fields.id)
+      table.integer("issue_id")
+           .references("id")
            .inTable(tables.issues.name);
 
-      table.date(fields.date);
-      table.string(fields.description);
+      table.date("date");
+      table.string("description");
 
-      table.integer(fields.change_type_id)
-           .references(tables.issue_change_types.fields.id)
+      table.integer("change_type_id")
+           .references("id")
            .inTable(tables.issue_change_types.name);
-      table.integer(fields.author_id)
-           .references(tables.project_members.fields.id)
+      table.integer("author_id")
+           .references("id")
            .inTable(tables.project_members.name);
 
-      table.primary([fields.issue_id, issues.date]);
+      table.primary(["issue_id", "date"]);
 
       table.timestamps();
     }
   },
   issue_change_types: {
     name: "Issue_Change_Types",
-    fields: {
-      id: "id",
-      project_id: "project_id",
-      name: "name",
-      description: "description",
-    },
+    fields: ["id", "project_id", "name", "description"],
     init: function (table) {
-      var fields = tables.issue_change_types.fields;
-
-      table.increments(fields.id);
-      table.integer(fields.project_id)
-           .references(tables.projects.fields.id)
+      table.increments("id");
+      table.integer("project_id")
+           .references("id")
            .inTable(tables.projects.name);
 
-      table.string(fields.name);
-      table.string(fields.description);
+      table.string("name");
+      table.string("description");
 
       table.timestamps();
     },
   },
   roles: {
     name: "Roles",
-    fields: {
-      id: "id",
-      name: "name",
-      description: "description",
-    },
+    fields: ["id", "name", "description"],
     init: function (table) {
-      var fields = tables.roles.fields;
+      table.increments("id");
 
-      table.increments(fields.id);
-
-      table.string(fields.name);
-      table.string(fields.description);
+      table.string("name");
+      table.string("description");
 
       table.timestamps();
     },
   },
   permissions: {
     name: "Permissions",
-    fields: {
-      id: "id",
-      name: "name",
-      description: "description",
-    },
+    fields: ["id", "name", "description"],
     init: function (table) {
-      var fields = tables.permissions.fields;
+      table.increments("id");
 
-      table.increments(fields.id);
-
-      table.string(fields.name);
-      table.string(fields.description);
+      table.string("name");
+      table.string("description");
 
       table.timestamps();
     },
   },
   users: {
     name: "Users",
-    fields: {
-      id: "id",
-      email: "email",
-      nickname: "nickname",
-      real_name: "real_name",
-    },
+    fields: ["id", "email", "nickname", "real_name"],
     init: function (table) {
-      var fields = tables.users.fields;
-
-      table.increments(fields.id);
-      table.string(fields.email);
-      table.string(fields.nickname);
-      table.string(fields.real_name);
+      table.increments("id");
+      table.string("email");
+      table.string("nickname");
+      table.string("real_name");
 
       table.timestamps();
     },
   },
   project_members: {
     name: "Project_Members",
-    fields: {
-      user_id: "user_id",
-      project_id: "project_id",
-      join_date: "join_date",
-      exit_date: "exit_date",
-    },
+    fields: ["user_id", "project_id", "join_date", "exit_date"],
     init: function (table) {
-      var fields = tables.project_members.fields;
-
-      table.integer(fields.user_id)
-           .references(tables.users.fields.id)
+      table.integer("user_id")
+           .references("id")
            .inTable(tables.users.name);
 
-      table.integer(fields.project_id)
-           .references(tables.projects.fields.id)
+      table.integer("project_id")
+           .references("id")
            .inTable(tables.projects.name);
 
-      table.date(fields.join_date);
-      table.date(fields.exit_date);
+      table.date("join_date");
+      table.date("exit_date");
 
-      table.primary(fields.user_id, fields.project_id);
+      table.primary(["user_id", "project_id"]);
 
       table.timestamps();
     },
   },
   project_member_roles: {
     name: "Project_Member_Roles",
-    fields: {
-      user_id: "user_id",
-      project_id: "project_id",
-      role_id: "role_id",
-    },
+    fields: ["user_id", "project_id", "role_id"],
     init: function (table) {
-      var fields = tables.project_member_roles.fields;
-
-      table.integer(fields.user_id)
-           .references(tables.users.fields.id)
+      table.integer("user_id")
+           .references("id")
            .inTable(tables.users.name);
 
-      table.integer(fields.project_id)
-           .references(tables.projects.fields.id)
+      table.integer("project_id")
+           .references("id")
            .inTable(tables.projects.name);
 
-      table.integer(fields.role_id)
-           .references(tables.roles.fields.id)
+      table.integer("role_id")
+           .references("id")
            .inTable(tables.roles.name);
 
-      table.primary(fields.user_id, fields.project_id, fields.role_id);
+      table.primary(["user_id", "project_id", "role_id"]);
 
       table.timestamps();
     },

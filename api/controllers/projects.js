@@ -1,7 +1,6 @@
 'use strict';
 
 var util = require('util');
-var utils = require('../helpers/utils');
 
 module.exports = {
   listProjects: listProjects,
@@ -9,35 +8,9 @@ module.exports = {
 };
 
 function listProjects(req, res) {
-  knex.select().from(tables.projects.name).then(function(info) {
-    console.log(info);
-    res.json(utils.without_nulls(info, true));
-  }, function (info) {
-    console.log(info);
-    res.json(info);
-  });
-
-  // this sends back a JSON response which is a single string
-  // res.json(projects);
+  tables.projects.get(null).then(function(info) { res.json(info) });
 }
 
 function createProject(req, res) {
-  // // variables defined in the Swagger document can be referenced using req.swagger.params.{parameter_name}
-  // var obj = {
-  //   id: "0",
-  //   name: req.swagger.params.project.value.name
-  // };
-
-  projectsSql.new(req.swagger.params.project.value)
-  .then(function(ids){
-    return projectsSql.get(ids[0]);
-  }).then(function(data) {
-    console.log(data);
-    res.json(utils.without_nulls(data[0], true));
-  });
-
-  // this sends back a JSON response which is a single string
-  // res.json(obj);
-
-  // res.json(req.swagger.params.project.value);
+  tables.projects.new(req.swagger.params.project.value).then(function(data) { res.json(data) });
 }
