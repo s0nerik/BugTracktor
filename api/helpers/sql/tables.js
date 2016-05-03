@@ -104,13 +104,13 @@ GLOBAL.tables = {
            .references(tables.issues.fields.id)
            .inTable(tables.issues.name);
 
-      table.date(issues.date);
-      table.string(issues.description);
+      table.date(fields.date);
+      table.string(fields.description);
 
-      table.integer(issues.change_type_id)
+      table.integer(fields.change_type_id)
            .references(tables.issue_change_types.fields.id)
            .inTable(tables.issue_change_types.name);
-      table.integer(issues.author_id)
+      table.integer(fields.author_id)
            .references(tables.project_members.fields.id)
            .inTable(tables.project_members.name);
 

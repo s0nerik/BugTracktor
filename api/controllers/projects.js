@@ -9,7 +9,7 @@ module.exports = {
 };
 
 function listProjects(req, res) {
-  var projects = knex.select().from(tables.projects.name).then(function(info) {
+  knex.select().from(tables.projects.name).then(function(info) {
     console.log(info);
     res.json(utils.without_nulls(info, true));
   }, function (info) {
@@ -33,7 +33,7 @@ function createProject(req, res) {
     return projectsSql.get(ids[0]);
   }).then(function(data) {
     console.log(data);
-    res.json(utils.without_nulls(data[0]));
+    res.json(utils.without_nulls(data[0], true));
   });
 
   // this sends back a JSON response which is a single string
