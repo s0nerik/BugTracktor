@@ -1,73 +1,251 @@
-var projects = require('./projects');
-var issues = require('./issues');
-var issueTypes = require('./issue_types');
-var issueChanges = require('./issue_changes');
-var issueChangeTypes = require('./issue_change_types');
-var roles = require('./roles');
-var permissions = require('./permissions');
-var users = require('./users');
-var projectMembers = require('./project_members');
-var projectMemberRoles = require('./project_member_roles');
-
 GLOBAL.tables = {
-  TABLE_PROJECTS: "Projects",
-  TABLE_ISSUES: "Issues",
-  TABLE_ISSUE_TYPES: "Issue_Types",
-  TABLE_ISSUE_CHANGES: "Issue_Changes",
-  TABLE_ISSUE_CHANGE_TYPES: "Issue_Change_Types",
-  TABLE_ROLES: "Roles",
-  TABLE_PERMISSIONS: "Permissions",
-  TABLE_USERS: "Users",
-  TABLE_PROJECT_MEMBERS: "Project_Members",
-  TABLE_PROJECT_MEMBER_ROLES: "Project_Member_Roles",
+  projects: {
+    name: "Projects",
+    fields: {
+      id: "id",
+      name: "name",
+      short_description: "short_description",
+      full_description: "full_description",
+    },
+    foreignFields: {
+      members: "members",
+      issues: "issues",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+      table.string(fields.name);
+      table.string(fields.short_description);
+      table.string(fields.full_description);
+      table.timestamps();
+    },
+    new: function(project) {
+      return knex.insert(utils.without_foreign_fields(projects, project)).into(projects.name);
+    },
+    get: function(id) {
+      if (id) {
+        return knex.select().where(projects.fields.id, id).from(projects.name)[0];
+      } else {
+        return knex.select().from(projects.name);
+      }
+    }
+  },
+  issue_types: {
+    name: "Issue_Types",
+    fields: {
+      id: "id",
+      name: "name",
+      description: "description",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+      table.string(fields.name);
+      table.string(fields.description);
+      table.timestamps();
+    }
+  },
+  issues: {
+    name: "Issues",
+    fields: {
+      id: "id",
+      project_id: "project_id",
+      type_id: "type_id",
+      short_description: "short_description",
+      full_description: "full_description",
+      creation_date: "creation_date"
+    },
+    foreignFields: {
+      project: "project",
+      type: "type",
+      history: "history"
+    },
+    init: function (table) {
+      var fields = tables.issues.fields;
+
+      table.increments(fields.id);
+
+      table.integer(fields.project_id)
+           .references(projects.id)
+           .inTable(projects.name);
+
+      table.integer(fields.type_id)
+           .references(issue_types.id)
+           .inTable(issue_types.name);
+
+      table.date(fields.creation_date);
+      table.string(fields.short_description);
+      table.string(fields.full_description);
+
+      table.timestamps();
+    }
+  },
+  issue_changes: {
+    name: "Issue_Changes",
+    fields: {
+      issue_id: "issue_id",
+      date: "date",
+      description: "description",
+      change_type_id: "change_type_id",
+      author_id: "author_id",
+      creation_date: "creation_date"
+    },
+    foreignFields: {
+      project: "project",
+      type: "type",
+      history: "history"
+    },
+    init: function (table) {
+      table.integer(fields.issue_id)
+           .references(issues.id)
+           .inTable(issues.name);
+
+      table.date(issues.date);
+      table.string(issues.description);
+
+      table.integer(issues.change_type_id)
+           .references(issue_change_types.id)
+           .inTable(tables.TABLE_ISSUE_CHANGE_TYPES);
+      table.integer(issues.author_id)
+           .references(project_members.id)
+           .inTable(project_members.name);
+
+      table.primary([fields.issue_id, issues.date]);
+
+      table.timestamps();
+    }
+  },
+  issue_change_types: {
+    name: "Issue_Change_Types",
+    fields: {
+      id: "id",
+      project_id: "project_id",
+      name: "name",
+      description: "description",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+      table.integer(fields.project_id)
+           .references(projects.id)
+           .inTable(projects.name);
+
+      table.string(fields.name);
+      table.string(fields.description);
+
+      table.timestamps();
+    },
+  },
+  roles: {
+    name: "Roles",
+    fields: {
+      id: "id",
+      name: "name",
+      description: "description",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+
+      table.string(fields.name);
+      table.string(fields.description);
+
+      table.timestamps();
+    },
+  },
+  permissions: {
+    name: "Permissions",
+    fields: {
+      id: "id",
+      name: "name",
+      description: "description",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+
+      table.string(fields.name);
+      table.string(fields.description);
+
+      table.timestamps();
+    },
+  },
+  users: {
+    name: "Users",
+    fields: {
+      id: "id",
+      email: "email",
+      nickname: "nickname",
+      real_name: "real_name",
+    },
+    init: function (table) {
+      table.increments(fields.id);
+      table.string(fields.email);
+      table.string(fields.nickname);
+      table.string(fields.real_name);
+
+      table.timestamps();
+    },
+  },
+  project_members: {
+    name: "Project_Members",
+    fields: {
+      user_id: "user_id",
+      project_id: "project_id",
+      join_date: "join_date",
+      exit_date: "exit_date",
+    },
+    init: function (table) {
+      table.integer(fields.user_id)
+           .references(users.id)
+           .inTable(users.name);
+
+      table.integer(fields.project_id)
+           .references(projects.id)
+           .inTable(projects.name);
+
+      table.date(fields.join_date);
+      table.date(fields.exit_date);
+
+      table.primary(fields.user_id, fields.project_id);
+
+      table.timestamps();
+    },
+  },
+  project_member_roles: {
+    name: "Project_Member_Roles",
+    fields: {
+      user_id: "user_id",
+      project_id: "project_id",
+      role_id: "role_id",
+    },
+    init: function (table) {
+      table.integer(fields.user_id)
+           .references(users.id)
+           .inTable(users.name);
+
+      table.integer(fields.project_id)
+           .references(projects.id)
+           .inTable(projects.name);
+
+      table.integer(fields.role_id)
+           .references(roles.id)
+           .inTable(roles.name);
+
+      table.primary(fields.user_id, fields.project_id, fields.role_id);
+
+      table.timestamps();
+    },
+  },
 }
 
 module.exports = {
-  createProjectsTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_PROJECTS, projects.create);
-  },
-  createIssuesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_ISSUES, issues.create);
-  },
-  createIssueTypesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_ISSUE_TYPES, issueTypes.create);
-  },
-  createIssueChangesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_ISSUE_CHANGES, issueChanges.create);
-  },
-  createIssueChangeTypesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_ISSUE_CHANGE_TYPES, issueChangeTypes.create);
-  },
-  createRolesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_ROLES, roles.create);
-  },
-  createPermissionsTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_PERMISSIONS, permissions.create);
-  },
-  createUsersTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_USERS, users.create);
-  },
-  createProjectMembersTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_PROJECT_MEMBERS, projectMembers.create);
-  },
-  createProjectMemberRolesTable: function(knex) {
-    return knex.schema.createTableIfNotExists(tables.TABLE_PROJECT_MEMBER_ROLES, projectMemberRoles.create);
-  },
   createAllTables: function(knex) {
-    this.createProjectsTable(knex).return(0);
-    this.createIssueTypesTable(knex).return(0);
-    this.createIssuesTable(knex).return(0);
-    this.createIssueChangesTable(knex).return(0);
-    this.createIssueChangeTypesTable(knex).return(0);
-    this.createPermissionsTable(knex).return(0);
-    this.createUsersTable(knex).return(0);
-    this.createProjectMembersTable(knex).return(0);
-    this.createProjectMemberRolesTable(knex).return(0);
+    for (var key in tables) {
+      if (tables.hasOwnProperty(key)) {
+        knex.schema.createTableIfNotExists(tables[key].name, tables[key].init).return(0)
+      }
+    }
   },
   dropAllTables: function(knex) {
-    for (var key in exports) {
-      if (key.startsWith("TABLE_")) {
-        knex.schema.dropTableIfExists(exports[key]).return(0);
+    for (var key in tables) {
+      if (tables.hasOwnProperty(key)) {
+        knex.schema.dropTableIfExists(tables[key].name).return(0);
       }
     }
   }

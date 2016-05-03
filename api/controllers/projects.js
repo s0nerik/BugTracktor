@@ -2,7 +2,6 @@
 
 var util = require('util');
 var utils = require('../helpers/utils');
-var projectsSql = require('../helpers/sql/projects')
 
 module.exports = {
   listProjects: listProjects,
@@ -10,7 +9,7 @@ module.exports = {
 };
 
 function listProjects(req, res) {
-  var projects = knex.select().from(tables.TABLE_PROJECTS).then(function(info) {
+  var projects = knex.select().from(tables.projects.name).then(function(info) {
     console.log(info);
     res.json(utils.without_nulls(info));
   }, function (info) {
