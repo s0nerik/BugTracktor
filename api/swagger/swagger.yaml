@@ -133,9 +133,11 @@ paths:
           schema:
             $ref: "#/definitions/Success"
   /projects/{projectId}/issues:
+    x-swagger-router-controller: issues
     parameters:
       - $ref: "#/parameters/projectIdParam"
     get:
+      operationId: listIssues
       description: |
         Gets a list of issues for a given project.
       parameters:
@@ -150,6 +152,7 @@ paths:
             items:
               $ref: "#/definitions/Issue"
     post:
+      operationId: createIssue
       description: |
         Creates a new issue.
       parameters:

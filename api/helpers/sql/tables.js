@@ -47,6 +47,16 @@ function take_fields(obj, fields) {
   return newObj;
 }
 
+/**
+ * Take only specified fields
+ */
+function insert_without(table, obj, fields) {
+  return knex.insert(without_fields(obj, fields))
+            .into(table.name)
+            .then(function(ids) { return table.get(ids[0]) })
+            .then(function(data) { return without_nulls(data, true) });
+}
+
 GLOBAL.tables = {
   projects: {
     name: "Projects",
@@ -121,8 +131,51 @@ GLOBAL.tables = {
       table.string("full_description");
 
       table.timestamps();
-    }
+    },
+    new: function(projectId, issue) {
+      var query;
+      return insert_without(tables.issues, issue, ["id", "project", "type", "history", "creation_date"]);
+      // TODO: fill creation_date
+
+      // return knex.insert(without_fields(issue, ["id", "project", "type", "history", "creation_date"]))
+      //           .into(tables.issues.name)
+      //           .then(function(ids) { return tables.issues.get(ids[0]) })
+      //           .then(function(data) { return without_nulls(data, true) });
+    },
+    get: function(issueId, projectId) {
+      var query;
+      if (issueId) {
+        query = knex.first()
+                    .where({id: issueId})
+                    .from(tables.issues.name);
+      } else if (projectId) {
+        query = knex.select()
+                    .where({project_id: projectId})
+                    .from(tables.issues.name);
+      }
+      return query.then(function (data) { return without_nulls(data, true) });
+    },
   },
+  // project_issues: {
+  //   name: "project_issues",
+  //   fields: ["project_id", "issue_id", "issue_index"],
+  //   foreignFields: ["project", "type", "history"],
+  //   init: function (table) {
+  //     table.integer("project_id")
+  //          .references("id")
+  //          .inTable(tables.projects.name);
+  //
+  //     table.integer("issue_id")
+  //          .references("id")
+  //          .inTable(tables.issue.name);
+  //
+  //     table.integer("issue_index");
+  //
+  //     table.primary(["project_id", "issue_id"]);
+  //
+  //     table.timestamps();
+  //   },
+  // },
   issue_changes: {
     name: "Issue_Changes",
     fields: ["issue_id", "date", "description", "change_type_id", "author_id", "creation_date"],
