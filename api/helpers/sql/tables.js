@@ -80,7 +80,16 @@ GLOBAL.tables = {
         query = knex.select().from(tables.projects.name);
       }
       return query.then(function (data) { return without_nulls(data, true) });
-    }
+    },
+    remove: function(id) {
+      var query;
+      if (id) {
+        query = knex.del().where("id", id).from(tables.projects.name);
+      } else {
+        query = knex.del().from(tables.projects.name);
+      }
+      return query.then(function (affectedRows) { return {"message": "success"} });
+    },
   },
   issue_types: {
     name: "Issue_Types",

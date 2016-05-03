@@ -7,6 +7,7 @@ module.exports = {
   createProject: createProject,
   getProject: getProject,
   updateProject: updateProject,
+  deleteProject: deleteProject,
 };
 
 function listProjects(req, res) {
@@ -24,4 +25,8 @@ function updateProject(req, res) {
 
 function createProject(req, res) {
   tables.projects.new(req.swagger.params.project.value).then(function(data) { res.json(data) });
+}
+
+function deleteProject(req, res) {
+  tables.projects.remove(req.swagger.params.projectId.value).then(function(data) { res.json(data) });
 }

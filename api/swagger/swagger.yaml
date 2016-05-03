@@ -123,6 +123,15 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Project"
+    delete:
+      operationId: deleteProject
+      description: |
+        Deletes a project.
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Success"
   /projects/{projectId}/issues:
     parameters:
       - $ref: "#/parameters/projectIdParam"
@@ -354,6 +363,16 @@ definitions:
       exit_date:
         type: string
         format: date
+  Success:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
   Error:
     type: object
     properties:
