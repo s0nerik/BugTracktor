@@ -12,6 +12,8 @@ GLOBAL.tables = {
       issues: "issues",
     },
     init: function (table) {
+      var fields = tables.projects.fields;
+
       table.increments(fields.id);
       table.string(fields.name);
       table.string(fields.short_description);
@@ -19,13 +21,13 @@ GLOBAL.tables = {
       table.timestamps();
     },
     new: function(project) {
-      return knex.insert(utils.without_foreign_fields(projects, project)).into(projects.name);
+      return knex.insert(utils.without_foreign_fields(this.projects, project)).into(this.projects.name);
     },
     get: function(id) {
       if (id) {
-        return knex.select().where(projects.fields.id, id).from(projects.name)[0];
+        return knex.select().where(this.projects.fields.id, id).from(this.projects.name)[0];
       } else {
-        return knex.select().from(projects.name);
+        return knex.select().from(this.projects.name);
       }
     }
   },
@@ -37,6 +39,8 @@ GLOBAL.tables = {
       description: "description",
     },
     init: function (table) {
+      var fields = tables.issue_types.fields;
+
       table.increments(fields.id);
       table.string(fields.name);
       table.string(fields.description);
@@ -64,12 +68,12 @@ GLOBAL.tables = {
       table.increments(fields.id);
 
       table.integer(fields.project_id)
-           .references(projects.id)
-           .inTable(projects.name);
+           .references(tables.projects.fields.id)
+           .inTable(tables.projects.name);
 
       table.integer(fields.type_id)
-           .references(issue_types.id)
-           .inTable(issue_types.name);
+           .references(tables.issue_types.fields.id)
+           .inTable(tables.issue_types.name);
 
       table.date(fields.creation_date);
       table.string(fields.short_description);
@@ -94,19 +98,21 @@ GLOBAL.tables = {
       history: "history"
     },
     init: function (table) {
+      var fields = tables.issue_changes.fields;
+
       table.integer(fields.issue_id)
-           .references(issues.id)
-           .inTable(issues.name);
+           .references(tables.issues.fields.id)
+           .inTable(tables.issues.name);
 
       table.date(issues.date);
       table.string(issues.description);
 
       table.integer(issues.change_type_id)
-           .references(issue_change_types.id)
-           .inTable(tables.TABLE_ISSUE_CHANGE_TYPES);
+           .references(tables.issue_change_types.fields.id)
+           .inTable(tables.issue_change_types.name);
       table.integer(issues.author_id)
-           .references(project_members.id)
-           .inTable(project_members.name);
+           .references(tables.project_members.fields.id)
+           .inTable(tables.project_members.name);
 
       table.primary([fields.issue_id, issues.date]);
 
@@ -122,10 +128,12 @@ GLOBAL.tables = {
       description: "description",
     },
     init: function (table) {
+      var fields = tables.issue_change_types.fields;
+
       table.increments(fields.id);
       table.integer(fields.project_id)
-           .references(projects.id)
-           .inTable(projects.name);
+           .references(tables.projects.fields.id)
+           .inTable(tables.projects.name);
 
       table.string(fields.name);
       table.string(fields.description);
@@ -141,6 +149,8 @@ GLOBAL.tables = {
       description: "description",
     },
     init: function (table) {
+      var fields = tables.roles.fields;
+
       table.increments(fields.id);
 
       table.string(fields.name);
@@ -157,6 +167,8 @@ GLOBAL.tables = {
       description: "description",
     },
     init: function (table) {
+      var fields = tables.permissions.fields;
+
       table.increments(fields.id);
 
       table.string(fields.name);
@@ -174,6 +186,8 @@ GLOBAL.tables = {
       real_name: "real_name",
     },
     init: function (table) {
+      var fields = tables.users.fields;
+
       table.increments(fields.id);
       table.string(fields.email);
       table.string(fields.nickname);
@@ -191,13 +205,15 @@ GLOBAL.tables = {
       exit_date: "exit_date",
     },
     init: function (table) {
+      var fields = tables.project_members.fields;
+
       table.integer(fields.user_id)
-           .references(users.id)
-           .inTable(users.name);
+           .references(tables.users.fields.id)
+           .inTable(tables.users.name);
 
       table.integer(fields.project_id)
-           .references(projects.id)
-           .inTable(projects.name);
+           .references(tables.projects.fields.id)
+           .inTable(tables.projects.name);
 
       table.date(fields.join_date);
       table.date(fields.exit_date);
@@ -215,17 +231,19 @@ GLOBAL.tables = {
       role_id: "role_id",
     },
     init: function (table) {
+      var fields = tables.project_member_roles.fields;
+
       table.integer(fields.user_id)
-           .references(users.id)
-           .inTable(users.name);
+           .references(tables.users.fields.id)
+           .inTable(tables.users.name);
 
       table.integer(fields.project_id)
-           .references(projects.id)
-           .inTable(projects.name);
+           .references(tables.projects.fields.id)
+           .inTable(tables.projects.name);
 
       table.integer(fields.role_id)
-           .references(roles.id)
-           .inTable(roles.name);
+           .references(tables.roles.fields.id)
+           .inTable(tables.roles.name);
 
       table.primary(fields.user_id, fields.project_id, fields.role_id);
 

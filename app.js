@@ -36,5 +36,5 @@ GLOBAL.knex = require('knex')({
 });
 
 var tables = require('./api/helpers/sql/tables');
-// tables.dropAllTables(knex);
+tables.dropAllTables(knex);
 tables.createAllTables(knex);

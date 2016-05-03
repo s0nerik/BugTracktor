@@ -11,8 +11,9 @@ module.exports = {
 function listProjects(req, res) {
   var projects = knex.select().from(tables.projects.name).then(function(info) {
     console.log(info);
-    res.json(utils.without_nulls(info));
+    res.json(utils.without_nulls(info, true));
   }, function (info) {
+    console.log(info);
     res.json(info);
   });
 
@@ -27,7 +28,8 @@ function createProject(req, res) {
   //   name: req.swagger.params.project.value.name
   // };
 
-  projectsSql.new(req.swagger.params.project.value).then(function(ids){
+  projectsSql.new(req.swagger.params.project.value)
+  .then(function(ids){
     return projectsSql.get(ids[0]);
   }).then(function(data) {
     console.log(data);
