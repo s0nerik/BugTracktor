@@ -1,0 +1,363 @@
+swagger: '2.0'
+
+info:
+  version: "0.0.1"
+  title: BugTracktor
+  description: A flexible bug tracker.
+  contact:
+    name: Alex Isaienko
+    email: thesonerik@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+host: localhost:10010
+basePath: /v1
+schemes:
+  - http
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+
+## Cross-request parameters
+
+parameters:
+  projectIdParam:
+    in: path
+    name: projectId
+    description: ID of the project to operate with.
+    required: true
+    type: integer
+    format: int64
+  issueIdParam:
+    in: path
+    name: issueId
+    description: ID of the issue to operate with.
+    required: true
+    type: integer
+    format: int64
+  fromDateQueryParam:
+    in: query
+    name: fromDate
+    description: Minimum date of the returned items.
+    required: false
+    type: string
+    format: date
+  toDateQueryParam:
+    in: query
+    name: toDate
+    description: Maximum date of the returned items.
+    required: false
+    type: string
+    format: date
+  limitQueryParam:
+    in: query
+    name: limit
+    description: Max size of the returned array.
+    required: false
+    type: integer
+    format: int32
+
+
+## Requests
+
+paths:
+  /projects:
+    x-swagger-router-controller: projects
+    get:
+      operationId: listProjects
+      description: |
+        Gets all projects available for a user.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Project"
+    post:
+      operationId: createProject
+      description: |
+        Creates a new project.
+      parameters:
+        - in: body
+          name: project
+          description: The project to create.
+          required: true
+          schema:
+            $ref: "#/definitions/Project"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Project"
+  /projects/{projectId}:
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+    get:
+      description: |
+        Gets a project with a given identifier.
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Project"
+    patch:
+      description: |
+        Updates a project with a new data.
+      parameters:
+        - in: body
+          name: project
+          description: The updated project.
+          required: true
+          schema:
+            $ref: "#/definitions/Project"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Project"
+  /projects/{projectId}/issues:
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+    get:
+      description: |
+        Gets a list of issues for a given project.
+      parameters:
+        - $ref: "#/parameters/limitQueryParam"
+        - $ref: "#/parameters/fromDateQueryParam"
+        - $ref: "#/parameters/toDateQueryParam"
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Issue"
+    post:
+      description: |
+        Creates a new issue.
+      parameters:
+        - in: body
+          name: issue
+          description: The issue to create.
+          required: true
+          schema:
+            $ref: '#/definitions/Issue'
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Issue"
+  /projects/{projectId}/issues/{issueId}:
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+      - $ref: "#/parameters/issueIdParam"
+    get:
+      description: |
+        Gets an issue with a given identifier.
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Issue"
+    patch:
+      description: |
+        Updates an issue with a new data (should produce a new IssueChange).
+      parameters:
+        - in: body
+          name: issue
+          description: The updated issue.
+          required: true
+          schema:
+            $ref: "#/definitions/Issue"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Issue"
+  /projects/{projectId}/issues/{issueId}/changes:
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+      - $ref: "#/parameters/issueIdParam"
+      - $ref: "#/parameters/limitQueryParam"
+      - $ref: "#/parameters/fromDateQueryParam"
+      - $ref: "#/parameters/toDateQueryParam"
+    get:
+      description: |
+        Gets changes of the given issue.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/IssueChange"
+
+
+## Data classes
+
+definitions:
+  Issue:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique issue identifier.
+      project:
+        $ref: "#/definitions/Project"
+      type:
+        $ref: "#/definitions/IssueType"
+      history:
+        type: array
+        items:
+          $ref: "#/definitions/IssueChange"
+      short_description:
+        type: string
+        description: Short description of the issue.
+      full_description:
+        type: string
+        description: Full description of the issue.
+      creation_date:
+        type: string
+        format: date
+        description: Date when issue was created.
+  Project:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique project identifier.
+      name:
+        type: string
+        description: Project name.
+      short_description:
+        type: string
+        description: Short description of the project.
+      full_description:
+        type: string
+        description: Full description of the project.
+      members:
+        type: array
+        items:
+          $ref: "#/definitions/ProjectMember"
+      issues:
+        type: array
+        items:
+          $ref: "#/definitions/Issue"
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique user identifier.
+      email:
+        type: string
+        format: email
+        description: User's email.
+      nickname:
+        type: string
+        format: nickname
+        description: User's nickname.
+      real_name:
+        type: string
+        description: User's real name.
+  IssueType:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique issue type identifier.
+      name:
+        type: string
+        description: Issue type name.
+      description:
+        type: string
+        description: Issue type description.
+  IssueChange:
+    type: object
+    properties:
+      issue:
+        $ref: "#/definitions/Issue"
+      date:
+        type: string
+        format: date
+      changeType:
+        $ref: "#/definitions/IssueChangeType"
+      author:
+        $ref: "#/definitions/ProjectMember"
+      description:
+        type: string
+        description: Issue change description.
+  IssueChangeType:
+    type: object
+    properties:
+      id:
+        type: integer
+      project:
+        $ref: "#/definitions/Project"
+      name:
+        type: string
+        description: Name of the type of change.
+      description:
+        type: string
+        description: Description of this type of change.
+  Role:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique role identifier.
+      name:
+        type: string
+        description: Role name.
+      description:
+        type: string
+        description: Role description.
+      permissions:
+        type: array
+        items:
+          $ref: "#/definitions/Permission"
+  Permission:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Unique permission identifier.
+      name:
+        type: string
+        description: Permission name.
+      description:
+        type: string
+        description: Permission description.
+  ProjectMember:
+    type: object
+    properties:
+      user:
+        $ref: "#/definitions/User"
+        description: User entity that is attached to the project as it's member.
+      project:
+        $ref: "#/definitions/Project"
+      roles:
+        type: array
+        items:
+          $ref: '#/definitions/Role'
+      join_date:
+        type: string
+        format: date
+      exit_date:
+        type: string
+        format: date
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
