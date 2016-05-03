@@ -6,6 +6,7 @@ module.exports = {
   listProjects: listProjects,
   createProject: createProject,
   getProject: getProject,
+  updateProject: updateProject,
 };
 
 function listProjects(req, res) {
@@ -14,6 +15,11 @@ function listProjects(req, res) {
 
 function getProject(req, res) {
   tables.projects.get(req.swagger.params.projectId.value).then(function(data) { res.json(data) });
+}
+
+function updateProject(req, res) {
+  req.swagger.params.project.value.id = req.swagger.params.projectId.value;
+  tables.projects.update(req.swagger.params.project.value).then(function(data) { res.json(data) });
 }
 
 function createProject(req, res) {

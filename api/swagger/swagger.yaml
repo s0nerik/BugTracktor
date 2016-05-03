@@ -108,6 +108,7 @@ paths:
           schema:
             $ref: "#/definitions/Project"
     patch:
+      operationId: updateProject
       description: |
         Updates a project with a new data.
       parameters:

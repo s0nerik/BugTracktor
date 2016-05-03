@@ -34,6 +34,19 @@ function without_fields(obj, fields) {
   return newObj;
 }
 
+/**
+ * Take only specified fields
+ */
+function take_fields(obj, fields) {
+  var newObj = {}
+  for (var key in obj) {
+    if (fields.indexOf(key) >= 0) {
+      newObj[key] = obj[key];
+    }
+  }
+  return newObj;
+}
+
 GLOBAL.tables = {
   projects: {
     name: "Projects",
@@ -50,6 +63,13 @@ GLOBAL.tables = {
       return knex.insert(without_fields(project, ["id", "members", "issues"]))
                 .into(tables.projects.name)
                 .then(function(ids) { return tables.projects.get(ids[0]) })
+                .then(function(data) { return without_nulls(data, true) });
+    },
+    update: function(project) {
+      return knex.where("id", "=", project.id)
+                .update(without_nulls(take_fields(project, ["name", "short_description", "full_description"])))
+                .table(tables.projects.name)
+                .then(function(affectedRows) { return tables.projects.get(project.id) })
                 .then(function(data) { return without_nulls(data, true) });
     },
     get: function(id) {
