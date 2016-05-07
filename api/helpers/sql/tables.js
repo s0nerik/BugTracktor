@@ -53,8 +53,8 @@ function take_fields(obj, fields) {
 function insert_without(table, obj, fields) {
   return knex.insert(without_fields(obj, fields))
             .into(table.name)
-            .then(function(ids) { return table.get(ids[0]) })
-            .then(function(data) { return without_nulls(data, true) });
+            .then(ids => table.get(ids[0]))
+            .then(data => without_nulls(data, true));
 }
 
 var T = {
