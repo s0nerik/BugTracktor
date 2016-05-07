@@ -10,7 +10,7 @@ function listIssues(req, res) {
 }
 
 function createIssue(req, res) {
-  tables.issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
+  tables.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
                .then(function(info) {
                  console.log(info);
                  res.json(info)

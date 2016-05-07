@@ -27,7 +27,7 @@ function without_nulls(obj, recurse) {
 function without_fields(obj, fields) {
   var newObj = {}
   for (var key in obj) {
-    if (fields.indexOf(key) < 0) {
+    if (fields && fields.indexOf(key) < 0) {
       newObj[key] = obj[key];
     }
   }
@@ -113,14 +113,10 @@ GLOBAL.tables = {
   },
   issues: {
     name: "Issues",
-    fields: ["id", "project_id", "type_id", "short_description", "full_description", "creation_date"],
+    fields: ["id", "type_id", "short_description", "full_description", "creation_date"],
     foreignFields: ["project", "type", "history"],
     init: function (table) {
       table.increments("id");
-
-      table.integer("project_id")
-           .references("id")
-           .inTable(tables.projects.name);
 
       table.integer("type_id")
            .references("id")
@@ -133,14 +129,7 @@ GLOBAL.tables = {
       table.timestamps();
     },
     new: function(projectId, issue) {
-      var query;
       return insert_without(tables.issues, issue, ["id", "project", "type", "history", "creation_date"]);
-      // TODO: fill creation_date
-
-      // return knex.insert(without_fields(issue, ["id", "project", "type", "history", "creation_date"]))
-      //           .into(tables.issues.name)
-      //           .then(function(ids) { return tables.issues.get(ids[0]) })
-      //           .then(function(data) { return without_nulls(data, true) });
     },
     get: function(issueId, projectId) {
       var query;
@@ -149,33 +138,55 @@ GLOBAL.tables = {
                     .where({id: issueId})
                     .from(tables.issues.name);
       } else if (projectId) {
-        query = knex.select()
-                    .where({project_id: projectId})
-                    .from(tables.issues.name);
+        query = knex.from(tables.project_issues.name)
+                    .innerJoin(tables.issues.name, "${tables.project_issues.name}.issue_id", "${tables.issues.name}.id")
+                    .innerJoin(tables.projects.name, "${tables.project_issues.name}.project_id", "${tables.projects.name}.id")
+                    .where("project_id", projectId);
       }
-      return query.then(function (data) { return without_nulls(data, true) });
+      return query.then((data) => without_nulls(data, true));
     },
   },
-  // project_issues: {
-  //   name: "project_issues",
-  //   fields: ["project_id", "issue_id", "issue_index"],
-  //   foreignFields: ["project", "type", "history"],
-  //   init: function (table) {
-  //     table.integer("project_id")
-  //          .references("id")
-  //          .inTable(tables.projects.name);
-  //
-  //     table.integer("issue_id")
-  //          .references("id")
-  //          .inTable(tables.issue.name);
-  //
-  //     table.integer("issue_index");
-  //
-  //     table.primary(["project_id", "issue_id"]);
-  //
-  //     table.timestamps();
-  //   },
-  // },
+  project_issues: {
+    name: "Project_Issues",
+    fields: ["project_id", "issue_id", "issue_index"],
+    foreignFields: ["project", "type", "history"],
+    init: function (table) {
+      table.integer("project_id")
+           .references("id")
+           .inTable(tables.projects.name);
+
+      table.integer("issue_id")
+           .references("id")
+           .inTable(tables.issues.name);
+
+      table.integer("issue_index");
+
+      table.primary(["project_id", "issue_id"]);
+
+      table.timestamps();
+    },
+    new: function(projectId, issue) {
+      return insert_without(tables.issues,
+                            issue,
+                            ["id", "project", "type", "history", "creation_date"])
+            .then(createdIssue => knex(tables.project_issues.name).select(knex.raw('count(*) as cnt'))
+                                                                  .where('project_id', projectId)
+                                                                  .then(indexQueryResult => {
+                                                                    var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
+                                                                    console.log("Result: "+lastProjectIssueIndex);
+                                                                    return [createdIssue, lastProjectIssueIndex+1];
+                                                                  })
+            )
+            .then(args => {
+              var projectIssue = {
+                project_id: projectId,
+                issue_id: args[0].id,
+                issue_index: args[1]
+              };
+              return knex(tables.project_issues.name).insert(projectIssue).return(args[0]);
+            });
+    },
+  },
   issue_changes: {
     name: "Issue_Changes",
     fields: ["issue_id", "date", "description", "change_type_id", "author_id", "creation_date"],
