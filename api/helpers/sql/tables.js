@@ -57,7 +57,7 @@ function insert_without(table, obj, fields) {
             .then(function(data) { return without_nulls(data, true) });
 }
 
-GLOBAL.tables = {
+var tables = {
   projects: {
     name: "Projects",
     fields: ["id", "name", "short_description", "full_description"],
@@ -303,21 +303,24 @@ GLOBAL.tables = {
       table.timestamps();
     },
   },
-}
 
-module.exports = {
+  /*
+   * Global database functions
+   */
   createAllTables: function(knex) {
     for (var key in tables) {
-      if (tables.hasOwnProperty(key)) {
+      if (tables.hasOwnProperty(key) && !(tables[key] instanceof Function)) {
         knex.schema.createTableIfNotExists(tables[key].name, tables[key].init).return(0)
       }
     }
   },
   dropAllTables: function(knex) {
     for (var key in tables) {
-      if (tables.hasOwnProperty(key)) {
+      if (tables.hasOwnProperty(key) && !(tables[key] instanceof Function)) {
         knex.schema.dropTableIfExists(tables[key].name).return(0);
       }
     }
   }
 }
+
+module.exports = tables;
