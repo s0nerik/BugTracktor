@@ -69,19 +69,15 @@ var T = {
       table.string("full_description");
       table.timestamps();
     },
-    new: function(project) {
-      return knex.insert(without_fields(project, ["id", "members", "issues"]))
-                .into(T.projects.name)
-                .then(function(ids) { return T.projects.get(ids[0]) })
-                .then(function(data) { return without_nulls(data, true) });
-    },
-    update: function(project) {
-      return knex.where("id", "=", project.id)
-                .update(without_nulls(take_fields(project, ["name", "short_description", "full_description"])))
-                .table(T.projects.name)
-                .then(function(affectedRows) { return T.projects.get(project.id) })
-                .then(function(data) { return without_nulls(data, true) });
-    },
+    new: project => knex.insert(without_fields(project, ["id", "members", "issues"]))
+                        .into(T.projects.name)
+                        .then(ids => T.projects.get(ids[0]))
+                        .then(data => without_nulls(data, true)),
+    update: project => knex.where("id", "=", project.id)
+                          .update(without_nulls(take_fields(project, ["name", "short_description", "full_description"])))
+                          .table(T.projects.name)
+                          .then(affectedRows => T.projects.get(project.id))
+                          .then(data => without_nulls(data, true)),
     get: function(id) {
       var query;
       if (id) {
