@@ -65,6 +65,16 @@ function update_where_id(table, object, fields) {
               .then(data => without_nulls(data, true))
 }
 
+function get_with_id(table, id) {
+  var query;
+  if (id) {
+    query = knex.first().where("id", id).from(table.name);
+  } else {
+    query = knex.select().from(table.name);
+  }
+  return query.then(data => without_nulls(data, true));
+}
+
 var T = {
   projects: {
     name: "Projects",
@@ -79,15 +89,7 @@ var T = {
     },
     new: project => insert_without(T.projects, project, ["id", "members", "issues"]),
     update: project => update_where_id(T.projects, project, ["name", "short_description", "full_description"]),
-    get: id => {
-      var query;
-      if (id) {
-        query = knex.first().where("id", id).from(T.projects.name);
-      } else {
-        query = knex.select().from(T.projects.name);
-      }
-      return query.then(data => without_nulls(data, true));
-    },
+    get: id => get_with_id(T.projects, id),
     remove: id => {
       var query;
       if (id) {
