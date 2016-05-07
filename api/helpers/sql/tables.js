@@ -62,7 +62,7 @@ var T = {
     name: "Projects",
     fields: ["id", "name", "short_description", "full_description"],
     foreignFields: ["members", "issues"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
       table.string("name");
       table.string("short_description");
@@ -78,23 +78,23 @@ var T = {
                           .table(T.projects.name)
                           .then(affectedRows => T.projects.get(project.id))
                           .then(data => without_nulls(data, true)),
-    get: function(id) {
+    get: id => {
       var query;
       if (id) {
         query = knex.first().where("id", id).from(T.projects.name);
       } else {
         query = knex.select().from(T.projects.name);
       }
-      return query.then(function (data) { return without_nulls(data, true) });
+      return query.then(data => without_nulls(data, true));
     },
-    remove: function(id) {
+    remove: id => {
       var query;
       if (id) {
         query = knex.del().where("id", id).from(T.projects.name);
       } else {
         query = knex.del().from(T.projects.name);
       }
-      return query.then(function (affectedRows) { return {"message": "success"} });
+      return query.then(affectedRows => {message: "success"});
     },
   },
   issue_types: {
