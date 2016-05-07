@@ -57,6 +57,14 @@ function insert_without(table, obj, fields) {
             .then(data => without_nulls(data, true));
 }
 
+function update_where_id(table, object, fields) {
+  return knex.where("id", "=", object.id)
+              .update(without_nulls(take_fields(object, fields)))
+              .table(table.name)
+              .then(affectedRows => table.get(object.id))
+              .then(data => without_nulls(data, true))
+}
+
 var T = {
   projects: {
     name: "Projects",
@@ -69,15 +77,8 @@ var T = {
       table.string("full_description");
       table.timestamps();
     },
-    new: project => knex.insert(without_fields(project, ["id", "members", "issues"]))
-                        .into(T.projects.name)
-                        .then(ids => T.projects.get(ids[0]))
-                        .then(data => without_nulls(data, true)),
-    update: project => knex.where("id", "=", project.id)
-                          .update(without_nulls(take_fields(project, ["name", "short_description", "full_description"])))
-                          .table(T.projects.name)
-                          .then(affectedRows => T.projects.get(project.id))
-                          .then(data => without_nulls(data, true)),
+    new: project => insert_without(T.projects, project, ["id", "members", "issues"]),
+    update: project => update_where_id(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => {
       var query;
       if (id) {
