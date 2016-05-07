@@ -57,7 +57,7 @@ function insert_without(table, obj, fields) {
             .then(function(data) { return without_nulls(data, true) });
 }
 
-var tables = {
+var T = {
   projects: {
     name: "Projects",
     fields: ["id", "name", "short_description", "full_description"],
@@ -71,32 +71,32 @@ var tables = {
     },
     new: function(project) {
       return knex.insert(without_fields(project, ["id", "members", "issues"]))
-                .into(tables.projects.name)
-                .then(function(ids) { return tables.projects.get(ids[0]) })
+                .into(T.projects.name)
+                .then(function(ids) { return T.projects.get(ids[0]) })
                 .then(function(data) { return without_nulls(data, true) });
     },
     update: function(project) {
       return knex.where("id", "=", project.id)
                 .update(without_nulls(take_fields(project, ["name", "short_description", "full_description"])))
-                .table(tables.projects.name)
-                .then(function(affectedRows) { return tables.projects.get(project.id) })
+                .table(T.projects.name)
+                .then(function(affectedRows) { return T.projects.get(project.id) })
                 .then(function(data) { return without_nulls(data, true) });
     },
     get: function(id) {
       var query;
       if (id) {
-        query = knex.first().where("id", id).from(tables.projects.name);
+        query = knex.first().where("id", id).from(T.projects.name);
       } else {
-        query = knex.select().from(tables.projects.name);
+        query = knex.select().from(T.projects.name);
       }
       return query.then(function (data) { return without_nulls(data, true) });
     },
     remove: function(id) {
       var query;
       if (id) {
-        query = knex.del().where("id", id).from(tables.projects.name);
+        query = knex.del().where("id", id).from(T.projects.name);
       } else {
-        query = knex.del().from(tables.projects.name);
+        query = knex.del().from(T.projects.name);
       }
       return query.then(function (affectedRows) { return {"message": "success"} });
     },
@@ -120,7 +120,7 @@ var tables = {
 
       table.integer("type_id")
            .references("id")
-           .inTable(tables.issue_types.name);
+           .inTable(T.issue_types.name);
 
       table.date("creation_date");
       table.string("short_description");
@@ -129,18 +129,18 @@ var tables = {
       table.timestamps();
     },
     new: function(projectId, issue) {
-      return insert_without(tables.issues, issue, ["id", "project", "type", "history", "creation_date"]);
+      return insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]);
     },
     get: function(issueId, projectId) {
       var query;
       if (issueId) {
         query = knex.first()
                     .where({id: issueId})
-                    .from(tables.issues.name);
+                    .from(T.issues.name);
       } else if (projectId) {
-        query = knex.from(tables.project_issues.name)
-                    .innerJoin(tables.issues.name, "${tables.project_issues.name}.issue_id", "${tables.issues.name}.id")
-                    .innerJoin(tables.projects.name, "${tables.project_issues.name}.project_id", "${tables.projects.name}.id")
+        query = knex.from(T.project_issues.name)
+                    .innerJoin(T.issues.name, "${tables.project_issues.name}.issue_id", "${tables.issues.name}.id")
+                    .innerJoin(T.projects.name, "${tables.project_issues.name}.project_id", "${tables.projects.name}.id")
                     .where("project_id", projectId);
       }
       return query.then((data) => without_nulls(data, true));
@@ -153,11 +153,11 @@ var tables = {
     init: function (table) {
       table.integer("project_id")
            .references("id")
-           .inTable(tables.projects.name);
+           .inTable(T.projects.name);
 
       table.integer("issue_id")
            .references("id")
-           .inTable(tables.issues.name);
+           .inTable(T.issues.name);
 
       table.integer("issue_index");
 
@@ -166,10 +166,10 @@ var tables = {
       table.timestamps();
     },
     new: function(projectId, issue) {
-      return insert_without(tables.issues,
+      return insert_without(T.issues,
                             issue,
                             ["id", "project", "type", "history", "creation_date"])
-            .then(createdIssue => knex(tables.project_issues.name).select(knex.raw('count(*) as cnt'))
+            .then(createdIssue => knex(T.project_issues.name).select(knex.raw('count(*) as cnt'))
                                                                   .where('project_id', projectId)
                                                                   .then(indexQueryResult => {
                                                                     var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
@@ -183,7 +183,7 @@ var tables = {
                 issue_id: args[0].id,
                 issue_index: args[1]
               };
-              return knex(tables.project_issues.name).insert(projectIssue).return(args[0]);
+              return knex(T.project_issues.name).insert(projectIssue).return(args[0]);
             });
     },
   },
@@ -194,17 +194,17 @@ var tables = {
     init: function (table) {
       table.integer("issue_id")
            .references("id")
-           .inTable(tables.issues.name);
+           .inTable(T.issues.name);
 
       table.date("date");
       table.string("description");
 
       table.integer("change_type_id")
            .references("id")
-           .inTable(tables.issue_change_types.name);
+           .inTable(T.issue_change_types.name);
       table.integer("author_id")
            .references("id")
-           .inTable(tables.project_members.name);
+           .inTable(T.project_members.name);
 
       table.primary(["issue_id", "date"]);
 
@@ -218,7 +218,7 @@ var tables = {
       table.increments("id");
       table.integer("project_id")
            .references("id")
-           .inTable(tables.projects.name);
+           .inTable(T.projects.name);
 
       table.string("name");
       table.string("description");
@@ -268,11 +268,11 @@ var tables = {
     init: function (table) {
       table.integer("user_id")
            .references("id")
-           .inTable(tables.users.name);
+           .inTable(T.users.name);
 
       table.integer("project_id")
            .references("id")
-           .inTable(tables.projects.name);
+           .inTable(T.projects.name);
 
       table.date("join_date");
       table.date("exit_date");
@@ -288,15 +288,15 @@ var tables = {
     init: function (table) {
       table.integer("user_id")
            .references("id")
-           .inTable(tables.users.name);
+           .inTable(T.users.name);
 
       table.integer("project_id")
            .references("id")
-           .inTable(tables.projects.name);
+           .inTable(T.projects.name);
 
       table.integer("role_id")
            .references("id")
-           .inTable(tables.roles.name);
+           .inTable(T.roles.name);
 
       table.primary(["user_id", "project_id", "role_id"]);
 
@@ -308,19 +308,19 @@ var tables = {
    * Global database functions
    */
   createAllTables: function(knex) {
-    for (var key in tables) {
-      if (tables.hasOwnProperty(key) && !(tables[key] instanceof Function)) {
-        knex.schema.createTableIfNotExists(tables[key].name, tables[key].init).return(0)
+    for (var key in T) {
+      if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
+        knex.schema.createTableIfNotExists(T[key].name, T[key].init).return(0)
       }
     }
   },
   dropAllTables: function(knex) {
-    for (var key in tables) {
-      if (tables.hasOwnProperty(key) && !(tables[key] instanceof Function)) {
-        knex.schema.dropTableIfExists(tables[key].name).return(0);
+    for (var key in T) {
+      if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
+        knex.schema.dropTableIfExists(T[key].name).return(0);
       }
     }
   }
 }
 
-module.exports = tables;
+module.exports = T;
