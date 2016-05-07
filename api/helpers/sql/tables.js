@@ -146,7 +146,7 @@ var T = {
     name: "Project_Issues",
     fields: ["project_id", "issue_id", "issue_index"],
     foreignFields: ["project", "type", "history"],
-    init: function (table) {
+    init: table => {
       table.integer("project_id")
            .references("id")
            .inTable(T.projects.name);
@@ -161,27 +161,26 @@ var T = {
 
       table.timestamps();
     },
-    new: function(projectId, issue) {
-      return insert_without(T.issues,
-                            issue,
-                            ["id", "project", "type", "history", "creation_date"])
-            .then(createdIssue => knex(T.project_issues.name).select(knex.raw('count(*) as cnt'))
-                                                                  .where('project_id', projectId)
-                                                                  .then(indexQueryResult => {
-                                                                    var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
-                                                                    console.log("Result: "+lastProjectIssueIndex);
-                                                                    return [createdIssue, lastProjectIssueIndex+1];
-                                                                  })
-            )
-            .then(args => {
-              var projectIssue = {
-                project_id: projectId,
-                issue_id: args[0].id,
-                issue_index: args[1]
-              };
-              return knex(T.project_issues.name).insert(projectIssue).return(args[0]);
-            });
-    },
+    new: (projectId, issue) =>
+      insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"])
+      .then(createdIssue =>
+        knex(T.project_issues.name)
+        .select(knex.raw('count(*) as cnt'))
+        .where('project_id', projectId)
+        .then(indexQueryResult => {
+          var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
+          console.log("Result: "+lastProjectIssueIndex);
+          return [createdIssue, lastProjectIssueIndex+1];
+        })
+      )
+      .then(args => knex(T.project_issues.name)
+                    .insert({
+                      project_id: projectId,
+                      issue_id: args[0].id,
+                      issue_index: args[1]
+                    })
+                    .return(args[0])
+      ),
   },
   issue_changes: {
     name: "Issue_Changes",
