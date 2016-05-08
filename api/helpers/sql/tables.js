@@ -183,7 +183,7 @@ var T = {
     name: "Issue_Changes",
     fields: ["issue_id", "date", "description", "change_type_id", "author_id", "creation_date"],
     foreignFields: ["project", "type", "history"],
-    init: function (table) {
+    init: table => {
       table.integer("issue_id")
            .references("id")
            .inTable(T.issues.name);
@@ -206,7 +206,7 @@ var T = {
   issue_change_types: {
     name: "Issue_Change_Types",
     fields: ["id", "project_id", "name", "description"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
       table.integer("project_id")
            .references("id")
@@ -221,7 +221,7 @@ var T = {
   roles: {
     name: "Roles",
     fields: ["id", "name", "description"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
 
       table.string("name");
@@ -233,7 +233,7 @@ var T = {
   permissions: {
     name: "Permissions",
     fields: ["id", "name", "description"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
 
       table.string("name");
@@ -245,7 +245,7 @@ var T = {
   users: {
     name: "Users",
     fields: ["id", "email", "nickname", "real_name"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
       table.string("email");
       table.string("nickname");
@@ -257,7 +257,7 @@ var T = {
   project_members: {
     name: "Project_Members",
     fields: ["user_id", "project_id", "join_date", "exit_date"],
-    init: function (table) {
+    init: table => {
       table.integer("user_id")
            .references("id")
            .inTable(T.users.name);
@@ -277,7 +277,7 @@ var T = {
   project_member_roles: {
     name: "Project_Member_Roles",
     fields: ["user_id", "project_id", "role_id"],
-    init: function (table) {
+    init: table => {
       table.integer("user_id")
            .references("id")
            .inTable(T.users.name);
