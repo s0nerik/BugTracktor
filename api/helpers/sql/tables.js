@@ -27,7 +27,7 @@ function without_nulls(obj, recurse) {
 function without_fields(obj, fields) {
   var newObj = {}
   for (var key in obj) {
-    if (fields && fields.indexOf(key) < 0) {
+    if (!fields || fields.indexOf(key) < 0) {
       newObj[key] = obj[key];
     }
   }
@@ -85,6 +85,10 @@ function remove_with_id(table, id) {
   return query.then(affectedRows => {message: "success"});
 }
 
+function table(table) {
+  return knex(table.name);
+}
+
 var T = {
   projects: {
     name: "Projects",
@@ -105,7 +109,7 @@ var T = {
   issue_types: {
     name: "Issue_Types",
     fields: ["id", "name", "description"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
       table.string("name");
       table.string("description");
@@ -116,7 +120,7 @@ var T = {
     name: "Issues",
     fields: ["id", "type_id", "short_description", "full_description", "creation_date"],
     foreignFields: ["project", "type", "history"],
-    init: function (table) {
+    init: table => {
       table.increments("id");
 
       table.integer("type_id")
@@ -129,23 +133,8 @@ var T = {
 
       table.timestamps();
     },
-    new: function(projectId, issue) {
-      return insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]);
-    },
-    get: function(issueId, projectId) {
-      var query;
-      if (issueId) {
-        query = knex.first()
-                    .where({id: issueId})
-                    .from(T.issues.name);
-      } else if (projectId) {
-        query = knex.from(T.project_issues.name)
-                    .innerJoin(T.issues.name, "${tables.project_issues.name}.issue_id", "${tables.issues.name}.id")
-                    .innerJoin(T.projects.name, "${tables.project_issues.name}.project_id", "${tables.projects.name}.id")
-                    .where("project_id", projectId);
-      }
-      return query.then((data) => without_nulls(data, true));
-    },
+    get: id => get_with_id(T.issues, id),
+    remove: id => remove_with_id(T.issues, id),
   },
   project_issues: {
     name: "Project_Issues",
@@ -167,7 +156,9 @@ var T = {
       table.timestamps();
     },
     new: (projectId, issue) =>
+      // Create issue
       insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"])
+      // Select last issue index inside a given project
       .then(createdIssue =>
         knex(T.project_issues.name)
         .select(knex.raw('count(*) as cnt'))
@@ -178,7 +169,8 @@ var T = {
           return [createdIssue, lastProjectIssueIndex+1];
         })
       )
-      .then(args => knex(T.project_issues.name)
+      // Insert new ProjectIssue and return an original issue
+      .then(args => table(T.project_issues)
                     .insert({
                       project_id: projectId,
                       issue_id: args[0].id,
