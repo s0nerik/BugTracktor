@@ -168,10 +168,12 @@ paths:
           schema:
             $ref: "#/definitions/Issue"
   /projects/{projectId}/issues/{issueId}:
+    x-swagger-router-controller: issues
     parameters:
       - $ref: "#/parameters/projectIdParam"
       - $ref: "#/parameters/issueIdParam"
     get:
+      operationId: getIssue
       description: |
         Gets an issue with a given identifier.
       responses:

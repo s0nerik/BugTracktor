@@ -5,6 +5,7 @@ var T = require('../helpers/sql/tables');
 module.exports = {
   listIssues: listIssues,
   createIssue: createIssue,
+  getIssue: getIssue,
 };
 
 function listIssues(req, res) {
@@ -20,5 +21,9 @@ function createIssue(req, res) {
 }
 
 function getIssue(req, res) {
-  T.issues.get(req.swagger.params.issueId.value).then(function(info) { res.json(info) });
+  T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueId.value)
+                  .then(info => {
+                    console.log(info);
+                    res.json(info);
+                  });
 }

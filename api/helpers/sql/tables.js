@@ -35,12 +35,14 @@ function without_fields(obj, fields) {
 }
 
 /**
- * Take only specified fields
+ * Take only specified fields. Works even for items in Array.
  */
 function take_fields(obj, fields) {
-  var newObj = {}
+  var newObj = obj instanceof Array ? [] : {};
   for (var key in obj) {
-    if (fields.indexOf(key) >= 0) {
+    if (obj[key] instanceof Object) {
+      newObj[key] = take_fields(obj[key], fields);
+    } else if (fields.indexOf(key) >= 0) {
       newObj[key] = obj[key];
     }
   }
@@ -178,6 +180,12 @@ var T = {
                     })
                     .return(args[0])
       ),
+    get: (projectId, issueIndex) => { // projectId -> NotNull
+      var where = issueIndex ? { issue_index: issueIndex, project_id: projectId } : { project_id: projectId };
+      var query = table(T.project_issues).select().where(where).innerJoin(T.issues.name, "project_issues.issue_id", "issues.id");
+      if (issueIndex) query = query.first();
+      return query.then(data => without_nulls(take_fields(data, T.issues.fields + ["issue_index"]), true));
+    }
   },
   issue_changes: {
     name: "Issue_Changes",
