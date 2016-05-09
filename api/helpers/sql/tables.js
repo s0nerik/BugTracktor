@@ -82,7 +82,7 @@ function remove_with_id(table, id) {
   } else {
     query = knex.del().from(table.name);
   }
-  return query.then(affectedRows => {message: "success"});
+  return query.then(affectedRows => ({"message": "success"}));
 }
 
 function table(table) {
