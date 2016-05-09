@@ -22,6 +22,16 @@ produces:
   - application/json
 
 
+## Security
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+
+security:
+  - api_key: []
+
 ## Cross-request parameters
 
 parameters:
@@ -72,6 +82,40 @@ parameters:
 ## Requests
 
 paths:
+  /register:
+    x-swagger-router-controller: users
+    post:
+      operationId: newUser
+      description: Creates a new user.
+      security: []
+      parameters:
+        - in: body
+          name: user
+          description: The user to create.
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/User"
+  /get_token:
+    x-swagger-router-controller: users
+    get:
+      operationId: getToken
+      description: Returns an access token for a user.
+      security: []
+      parameters:
+        - in: body
+          name: user
+          description: The user who wants a token.
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        200:
+          $ref: "#/responses/Token"
   /projects:
     x-swagger-router-controller: projects
     get:
@@ -222,6 +266,15 @@ paths:
               $ref: "#/definitions/IssueChange"
 
 
+## Responses
+
+responses:
+  Token:
+    description: User's access token.
+    schema:
+      type: string
+
+
 ## Data classes
 
 definitions:
@@ -285,6 +338,9 @@ definitions:
         type: string
         format: email
         description: User's email.
+      password:
+        type: string
+        description: User's password.
       nickname:
         type: string
         format: nickname
@@ -292,6 +348,7 @@ definitions:
       real_name:
         type: string
         description: User's real name.
+    required: ["email", "password"]
   IssueType:
     type: object
     properties:

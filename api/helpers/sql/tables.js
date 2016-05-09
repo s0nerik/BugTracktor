@@ -254,15 +254,18 @@ var T = {
   },
   users: {
     name: "Users",
-    fields: ["id", "email", "nickname", "real_name"],
+    fields: ["id", "email", "password", "nickname", "real_name"],
     init: table => {
       table.increments("id");
       table.string("email");
+      table.string("password");
       table.string("nickname");
       table.string("real_name");
 
       table.timestamps();
     },
+    new: user => insert_without(T.users, user, ["id"]),
+    get: id => get_with_id(T.users, id),
   },
   project_members: {
     name: "Project_Members",
