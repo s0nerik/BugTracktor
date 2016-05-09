@@ -1,3 +1,5 @@
+var crypto = require('crypto');
+
 /**
  * Delete all null (or undefined) properties from an object.
  * Set 'recurse' to true if you also want to delete properties in nested objects.
@@ -71,6 +73,16 @@ function get_with_id(table, id) {
   var query;
   if (id) {
     query = knex.first().where("id", id).from(table.name);
+  } else {
+    query = knex.select().from(table.name);
+  }
+  return query.then(data => without_nulls(data, true));
+}
+
+function get_with_field_value(table, field, value) {
+  var query;
+  if (field && value) {
+    query = knex.first().where(field, value).from(table.name);
   } else {
     query = knex.select().from(table.name);
   }
@@ -266,6 +278,7 @@ var T = {
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
+    get_with_email: email => get_with_field_value(T.users, "email", email),
   },
   project_members: {
     name: "Project_Members",
@@ -307,6 +320,37 @@ var T = {
 
       table.timestamps();
     },
+  },
+  tokens: {
+    name: "tokens",
+    fields: ["user_id", "token", "updated_at"],
+    init: table => {
+      table.integer("user_id")
+           .references("id")
+           .inTable(T.users.name);
+
+      table.string("token");
+      table.dateTime("updated_at");
+
+      table.primary(["user_id"]);
+    },
+    update_token_for_user_id: userId => {
+      var token = {
+        user_id: userId,
+        token: crypto.randomBytes(64).toString('hex'),
+        updated_at: new Date().toISOString()
+      };
+      var query = table(T.tokens).where("user_id", userId);
+      return query.then(data => {
+        if (Object.keys(data).length === 0) { // Token not found, let's create a new one!
+          return table(T.tokens).insert(token);
+        } else { // Token found, let's update it!
+          return table(T.tokens).where("user_id", userId).update(token);
+        }
+      }).return(take_fields(token, ["token"]));
+    },
+    get_for_user_id: userId => get_with_field_value(T.tokens, "user_id", userId),
+    get_user_by_token: token => table(T.tokens).first(T.users.fields).innerJoin(T.users.name, "tokens.user_id", "users.id"),
   },
 
   /*
