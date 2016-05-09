@@ -9,7 +9,7 @@ module.exports = {
 };
 
 function listIssues(req, res) {
-  T.issues.get(null, req.swagger.params.projectId.value).then(function(info) { res.json(info) });
+  T.project_issues.get(req.swagger.params.projectId.value).then(info => res.json(info));
 }
 
 function createIssue(req, res) {
@@ -21,7 +21,7 @@ function createIssue(req, res) {
 }
 
 function getIssue(req, res) {
-  T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueId.value)
+  T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
                   .then(info => {
                     console.log(info);
                     res.json(info);

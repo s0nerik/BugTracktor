@@ -39,6 +39,13 @@ parameters:
     required: true
     type: integer
     format: int64
+  issueIndexParam:
+    in: path
+    name: issueIndex
+    description: Index of the issue to operate with.
+    required: true
+    type: integer
+    format: int64
   fromDateQueryParam:
     in: query
     name: fromDate
@@ -167,11 +174,11 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Issue"
-  /projects/{projectId}/issues/{issueId}:
+  /projects/{projectId}/issues/{issueIndex}:
     x-swagger-router-controller: issues
     parameters:
       - $ref: "#/parameters/projectIdParam"
-      - $ref: "#/parameters/issueIdParam"
+      - $ref: "#/parameters/issueIndexParam"
     get:
       operationId: getIssue
       description: |
@@ -196,10 +203,10 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Issue"
-  /projects/{projectId}/issues/{issueId}/changes:
+  /projects/{projectId}/issues/{issueIndex}/changes:
     parameters:
       - $ref: "#/parameters/projectIdParam"
-      - $ref: "#/parameters/issueIdParam"
+      - $ref: "#/parameters/issueIndexParam"
       - $ref: "#/parameters/limitQueryParam"
       - $ref: "#/parameters/fromDateQueryParam"
       - $ref: "#/parameters/toDateQueryParam"
