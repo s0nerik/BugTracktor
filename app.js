@@ -39,3 +39,8 @@ GLOBAL.knex = require('knex')({
 var tables = require('./api/helpers/sql/tables');
 // tables.dropAllTables(knex);
 tables.createAllTables(knex);
+
+Date.prototype.addMinutes = function(minutes) {
+    var copiedDate = new Date(this.getTime());
+    return new Date(copiedDate.getTime() + minutes * 60000);
+}

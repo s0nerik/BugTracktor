@@ -107,15 +107,22 @@ paths:
       description: Returns an access token for a user.
       security: []
       parameters:
-        - in: body
-          name: user
-          description: The user who wants a token.
+        - in: header
+          name: email
+          description: User's email.
           required: true
-          schema:
-            $ref: "#/definitions/User"
+          type: string
+          format: email
+        - in: header
+          name: password
+          description: User's password.
+          required: true
+          type: string
       responses:
         200:
-          $ref: "#/responses/Token"
+          description: Success
+          schema:
+            $ref: "#/definitions/Token"
   /projects:
     x-swagger-router-controller: projects
     get:
@@ -264,15 +271,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/IssueChange"
-
-
-## Responses
-
-responses:
-  Token:
-    description: User's access token.
-    schema:
-      type: string
 
 
 ## Data classes
@@ -455,3 +453,14 @@ definitions:
         type: string
       fields:
         type: string
+  Token:
+    type: object
+    properties:
+      token:
+        type: string
+        description: User's temporary access token.
+      # valid_until:
+      #   type: string
+      #   format: date-time
+      #   description: Date when this token will become invalid.
+    required: ["token"]
