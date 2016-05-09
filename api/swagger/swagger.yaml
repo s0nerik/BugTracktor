@@ -224,6 +224,9 @@ definitions:
       id:
         type: integer
         description: Unique issue identifier.
+      issue_index:
+        type: integer
+        description: Index of the issue inside the project.
       project:
         $ref: "#/definitions/Project"
       type:

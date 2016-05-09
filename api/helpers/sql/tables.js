@@ -135,6 +135,8 @@ var T = {
 
       table.timestamps();
     },
+    new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
+    update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
     get: id => get_with_id(T.issues, id),
     remove: id => remove_with_id(T.issues, id),
   },
@@ -159,7 +161,7 @@ var T = {
     },
     new: (projectId, issue) =>
       // Create issue
-      insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"])
+      T.issues.new(issue)
       // Select last issue index inside a given project
       .then(createdIssue =>
         knex(T.project_issues.name)
@@ -178,7 +180,7 @@ var T = {
                       issue_id: args[0].id,
                       issue_index: args[1]
                     })
-                    .return(args[0])
+                    .then(data => T.project_issues.get(projectId, args[1]))
       ),
     get: (projectId, issueIndex) => { // projectId -> NotNull
       var where = issueIndex ? { issue_index: issueIndex, project_id: projectId } : { project_id: projectId };
