@@ -223,7 +223,13 @@ var T = {
       table.primary(["issue_id", "date"]);
 
       table.timestamps();
-    }
+    },
+    get: (issueId, date) => { // issueId -> NotNull
+      var where = date ? { "date": date, "issue_id": issueId } : { "issue_id": issueId };
+      var query = table(T.issue_changes).select().where(where);
+      if (date) query = query.first();
+      return query.then(data => without_nulls(data, true));
+    },
   },
   issue_change_types: {
     name: "Issue_Change_Types",
@@ -262,6 +268,20 @@ var T = {
       table.string("description");
 
       table.timestamps();
+    },
+  },
+  role_permissions: {
+    name: "role_permissions",
+    fields: ["role_id", "permission_id"],
+    init: table => {
+      table.integer("role_id")
+           .references("id")
+           .inTable(T.roles.name);
+      table.integer("permission_id")
+           .references("id")
+           .inTable(T.permissions.name);
+
+      table.primary(["role_id", "permission_id"]);
     },
   },
   users: {
