@@ -1,4 +1,7 @@
+'use strict';
+
 var crypto = require('crypto');
+var Promise = require("bluebird");
 
 /**
  * Delete all null (or undefined) properties from an object.
@@ -258,17 +261,22 @@ var T = {
       table.timestamps();
     },
   },
-  permissions: {
+  permissions: { // Predefined permissions table
     name: "Permissions",
-    fields: ["id", "name", "description"],
+    fields: ["name", "description"],
+    clearOnInit: true,
     init: table => {
-      table.increments("id");
-
       table.string("name");
       table.string("description");
 
-      table.timestamps();
+      table.primary("name");
     },
+    afterInit: () => {
+      console.log("permissions: afterInit");
+      var permissions = require('./permissions');
+      // return table(T.permissions).insert({});
+      return table(T.permissions).insert(permissions.asArray());
+    }
   },
   role_permissions: {
     name: "role_permissions",
@@ -370,25 +378,34 @@ var T = {
       }).return(take_fields(token, ["token"]));
     },
     get_for_user_id: userId => get_with_field_value(T.tokens, "user_id", userId),
-    get_user_by_token: token => table(T.tokens).first(T.users.fields).innerJoin(T.users.name, "tokens.user_id", "users.id"),
+    get_user_by_token: token => table(T.tokens).first()
+                                              .innerJoin(T.users.name, "tokens.user_id", "users.id")
+                                              .then(data => without_nulls(take_fields(data, T.users.fields))),
   },
 
   /*
    * Global database functions
    */
   createAllTables: function(knex) {
+    var query = Promise.resolve(true);
     for (var key in T) {
       if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
-        knex.schema.createTableIfNotExists(T[key].name, T[key].init).return(0)
+        let tbl = T[key];
+        if (tbl.clearOnInit) query = query.then(data => knex.schema.dropTableIfExists(tbl.name));
+        query = query.then(data => knex.schema.createTableIfNotExists(tbl.name, tbl.init));
+        if (tbl.afterInit) query = query.then(data => tbl.afterInit());
       }
     }
+    return query;
   },
   dropAllTables: function(knex) {
+    var query = Promise.resolve(true);
     for (var key in T) {
       if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
-        knex.schema.dropTableIfExists(T[key].name).return(0);
+        query = query.then(data => knex.schema.dropTableIfExists(T[key].name));
       }
     }
+    return query;
   }
 }
 

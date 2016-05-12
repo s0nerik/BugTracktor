@@ -406,12 +406,9 @@ definitions:
   Permission:
     type: object
     properties:
-      id:
-        type: integer
-        description: Unique permission identifier.
       name:
         type: string
-        description: Permission name.
+        description: Unique permission name.
       description:
         type: string
         description: Permission description.
