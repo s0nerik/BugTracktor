@@ -3,6 +3,7 @@
 var SwaggerExpress = require('swagger-express-mw');
 var app = require('express')();
 var cors = require('cors');
+var tables = require('./api/helpers/sql/tables');
 
 module.exports = app; // for testing
 
@@ -36,7 +37,6 @@ GLOBAL.knex = require('knex')({
   debug: true
 });
 
-var tables = require('./api/helpers/sql/tables');
 // tables.dropAllTables(knex);
 tables.createAllTables(knex);
 
