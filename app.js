@@ -4,6 +4,7 @@ var SwaggerExpress = require('swagger-express-mw');
 var app = require('express')();
 var cors = require('cors');
 var tables = require('./api/helpers/sql/tables');
+var methodPermissions = require('./api/helpers/method_permissions');
 
 module.exports = app; // for testing
 
@@ -11,7 +12,21 @@ var config = {
   appRoot: __dirname, // required config
   swaggerSecurityHandlers: {
     api_key: (req, authOrSecDef, scopesOrApiKey, callback) => {
-      return callback(); // no arguments if allow, object if disallow
+      var query;
+      if (req.swagger.params && req.swagger.params.projectId) {
+        query = tables.permissions.get_by_token(scopesOrApiKey, req.swagger.params.projectId.value)
+      } else {
+        query = tables.permissions.get_by_token(scopesOrApiKey, 0)
+      }
+
+      return query.then(data => {
+         // callback with no arguments if allow, and with object if disallow
+        if (data.indexOf(methodPermissions[req.swagger.operation.operationId]) > -1) {
+          callback();
+        } else {
+          callback({});
+        }
+      });
     }
   }
 };

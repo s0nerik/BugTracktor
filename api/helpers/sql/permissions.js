@@ -1,20 +1,49 @@
 'use strict';
 
 module.exports = {
-  create_issue: {
-    description: ""
-  },
-  change_issue_status: {
-    description: ""
-  },
-  close_issue: {
-    description: ""
+  list_projects: {
+    request_method: "GET",
+    request_url: ""
   },
   create_project: {
-    description: ""
+    request_method: "POST",
+    request_url: ""
+  },
+  get_project: {
+    request_method: "GET",
+    request_url: ""
+  },
+  update_project: {
+    request_method: "PUT",
+    request_url: ""
+  },
+  list_issues: {
+    request_method: "GET",
+    request_url: ""
+  },
+  get_issue: {
+    request_method: "GET",
+    request_url: ""
+  },
+  create_issue: {
+    request_method: "POST",
+    request_url: ""
+  },
+  change_issue_status: {
+    request_method: "PUT",
+    request_url: ""
+  },
+  close_issue: {
+    request_method: "POST",
+    request_url: ""
+  },
+  create_project: {
+    request_method: "POST",
+    request_url: ""
   },
   delete_project: {
-    description: ""
+    request_method: "DELETE",
+    request_url: ""
   },
 
   asArray: () => {

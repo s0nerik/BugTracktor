@@ -263,33 +263,41 @@ var T = {
   },
   permissions: { // Predefined permissions table
     name: "Permissions",
-    fields: ["name", "description"],
+    fields: ["name", "request_method", "request_url"],
     clearOnInit: true,
     init: table => {
       table.string("name");
-      table.string("description");
+
+      table.string("request_method");
+      table.string("request_url");
 
       table.primary("name");
     },
     afterInit: () => {
-      console.log("permissions: afterInit");
       var permissions = require('./permissions');
-      // return table(T.permissions).insert({});
       return table(T.permissions).insert(permissions.asArray());
-    }
+    },
+    get_by_token: (token, projectId) =>
+      table(T.permissions)
+        .distinct(T.permissions.name+".name")
+        .innerJoin(T.tokens.name, T.tokens.name+".token", token)
+        .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", T.tokens.name+".user_id")
+                                                                  .andOn(T.project_member_roles.name+".project_id", projectId)})
+        .innerJoin(T.role_permissions.name, T.role_permissions.name+".permission_name", T.permissions.name+".name")
+        .then(data => without_nulls(data)),
   },
   role_permissions: {
     name: "role_permissions",
-    fields: ["role_id", "permission_id"],
+    fields: ["role_id", "permission_name"],
     init: table => {
       table.integer("role_id")
            .references("id")
            .inTable(T.roles.name);
-      table.integer("permission_id")
-           .references("id")
+      table.string("permission_name")
+           .references("name")
            .inTable(T.permissions.name);
 
-      table.primary(["role_id", "permission_id"]);
+      table.primary(["role_id", "permission_name"]);
     },
   },
   users: {
