@@ -45,8 +45,6 @@ var config = {
       }
 
       return query.then(data => {
-        console.log("------------------");
-        console.log(data);
          // callback with no arguments if allow, and with object if disallow
         if (!methodPermissions[req.swagger.operation.operationId] || methodPermissions[req.swagger.operation.operationId].equalsFreeOrder(data)) {
           callback();
