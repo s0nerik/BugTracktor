@@ -18,12 +18,22 @@ function listProjects(req, res) {
 
 function getProject(req, res) {
   T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
-            .then(info => res.json(info));
+            .then(info => {
+              if (info) res.json(info);
+              else res.json(404, {message: "Not found"});
+            });
 }
 
 function updateProject(req, res) {
-  req.swagger.params.project.value.id = req.swagger.params.projectId.value;
-  T.projects.update(req.swagger.params.project.value).then(data => res.json(data));
+  T.project_members.check_member(req.user.id, req.swagger.params.projectId.value)
+                   .then(isMember => {
+                     if (isMember) {
+                       req.swagger.params.project.value.id = req.swagger.params.projectId.value;
+                       T.projects.update(req.swagger.params.project.value).then(data => res.json(data));
+                     } else {
+                       res.json(403, {message: "You're not a member of this project"});
+                     }
+                   })
 }
 
 function createProject(req, res) {

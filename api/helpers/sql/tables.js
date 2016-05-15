@@ -49,7 +49,11 @@ function without_fields(obj, fields) {
 function take_fields(obj, fields) {
   var newObj = obj instanceof Array ? [] : {};
   for (var key in obj) {
-    if (obj[key] instanceof Object) {
+    if (Array.isArray(obj[key])) {
+      if (obj[key].length > 0) {
+        newObj[key] = take_fields(obj[key], fields);
+      }
+    } else if (obj[key] instanceof Object) {
       newObj[key] = take_fields(obj[key], fields);
     } else if (fields.indexOf(key) >= 0) {
       newObj[key] = obj[key];
@@ -145,13 +149,13 @@ var T = {
                                                                            .where("user_id", user.id);
                                                 })
                                                 .then(data => without_nulls(data)),
-  get_user_project_by_id: (user, projectId) => table(T.projects).first()
-                                                                .whereIn("id", function() {
-                                                                  this.select('project_id').from(T.project_members.name)
-                                                                                           .where("user_id", user.id);
-                                                                })
-                                                                .andWhere("id", projectId)
-                                                                .then(data => without_nulls(data)),
+    get_user_project_by_id: (user, projectId) => table(T.projects).first()
+                                                                  .whereIn("id", function() {
+                                                                    this.select('project_id').from(T.project_members.name)
+                                                                                             .where("user_id", user.id);
+                                                                  })
+                                                                  .andWhere("id", projectId)
+                                                                  .then(data => without_nulls(data)),
     remove: id => remove_with_id(T.projects, id),
   },
   issue_types: {
@@ -385,6 +389,13 @@ var T = {
 
       table.primary(["user_id", "project_id"]);
     },
+    check_member: (userId, projectId) => table(T.project_members).first()
+                                                                 .where("user_id", userId)
+                                                                 .andWhere("project_id", projectId)
+                                                                 .then(data => {
+                                                                   if (data) return true;
+                                                                   else return false;
+                                                                 }),
   },
   project_member_roles: {
     name: "Project_Member_Roles",

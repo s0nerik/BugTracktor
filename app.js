@@ -9,29 +9,10 @@ var Promise = require("bluebird");
 
 module.exports = app; // for testing
 
-Array.prototype.equalsFreeOrder = function (array) {
-    var isThisElemExist;
-    if (!array)
-        return false;
-
-    if (this.length != array.length)
-        return false;
-
-    for (var i = 0; i < this.length; i++) {
-        isThisElemExist = false;
-        for (var k = 0; k < this.length; k++) {
-            if (this[i] instanceof Array && array[k] instanceof Array) {
-                if (this[i].equalsFreeOrder(array[k]))
-                    isThisElemExist = true;
-            }
-            else if (this[i] == array[k]) {
-                isThisElemExist = true;
-            }
-        }
-        if (!isThisElemExist)
-            return false;
-    }
-    return true;
+var containsAll = function (original, array) {
+  return array.every(function(v,i) {
+    return original.indexOf(v) !== -1;
+  })
 }
 
 var config = {
@@ -50,7 +31,7 @@ var config = {
 
       return query.then(data => {
         // callback with no arguments if allow, and with object if disallow
-        if (!methodPermissions[req.swagger.operation.operationId] || methodPermissions[req.swagger.operation.operationId].equalsFreeOrder(data)) {
+        if (!methodPermissions[req.swagger.operation.operationId] || (data && containsAll(data, methodPermissions[req.swagger.operation.operationId]))) {
           callback();
         } else {
           callback({});
