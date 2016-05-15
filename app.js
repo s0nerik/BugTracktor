@@ -5,6 +5,7 @@ var app = require('express')();
 var cors = require('cors');
 var tables = require('./api/helpers/sql/tables');
 var methodPermissions = require('./api/helpers/method_permissions');
+var Promise = require("bluebird");
 
 module.exports = app; // for testing
 
@@ -37,15 +38,18 @@ var config = {
   appRoot: __dirname, // required config
   swaggerSecurityHandlers: {
     api_key: (req, authOrSecDef, scopesOrApiKey, callback) => {
-      var query;
+      var query = Promise.resolve(true);
+      query = query.then(data => tables.tokens.get_user_by_token(scopesOrApiKey))
+                   .then(user => req.user = user);
+
       if (req.swagger.params && req.swagger.params.projectId) {
-        query = tables.permissions.get_by_token(scopesOrApiKey, req.swagger.params.projectId.value)
+        query = query.then(data => tables.permissions.get_by_token(scopesOrApiKey, req.swagger.params.projectId.value));
       } else {
-        query = tables.permissions.get_by_token(scopesOrApiKey, 0)
+        query = query.then(data => tables.permissions.get_by_token(scopesOrApiKey, 0));
       }
 
       return query.then(data => {
-         // callback with no arguments if allow, and with object if disallow
+        // callback with no arguments if allow, and with object if disallow
         if (!methodPermissions[req.swagger.operation.operationId] || methodPermissions[req.swagger.operation.operationId].equalsFreeOrder(data)) {
           callback();
         } else {

@@ -22,7 +22,11 @@ function delete_null_properties(obj, recurse) {
  * Set 'recurse' to true if you also want to delete properties in nested objects.
  */
 function without_nulls(obj, recurse) {
-  delete_null_properties(obj, recurse);
+  if (recurse == null) {
+    delete_null_properties(obj, true);
+  } else {
+    delete_null_properties(obj, recurse);
+  }
   return obj;
 }
 
@@ -121,6 +125,12 @@ var T = {
     new: project => insert_without(T.projects, project, ["id", "members", "issues"]),
     update: project => update_where_id(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => get_with_id(T.projects, id),
+    get_user_projects: user => table(T.projects).select()
+                                                .whereIn("id", function() {
+                                                  this.select('project_id').from(T.project_members.name)
+                                                                           .where("user_id", user.id);
+                                                })
+                                                .then(data => without_nulls(data)),
     remove: id => remove_with_id(T.projects, id),
   },
   issue_types: {
@@ -318,7 +328,7 @@ var T = {
   },
   project_members: {
     name: "Project_Members",
-    fields: ["user_id", "project_id", "join_date", "exit_date"],
+    fields: ["user_id", "project_id", "join_date"],
     init: table => {
       table.integer("user_id")
            .references("id")
@@ -329,11 +339,8 @@ var T = {
            .inTable(T.projects.name);
 
       table.date("join_date");
-      table.date("exit_date");
 
       table.primary(["user_id", "project_id"]);
-
-      table.timestamps();
     },
   },
   project_member_roles: {

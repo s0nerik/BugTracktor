@@ -13,7 +13,7 @@ module.exports = {
 };
 
 function listProjects(req, res) {
-  T.projects.get(null).then(function(info) { res.json(info) });
+  T.projects.get_user_projects(req.user).then(info => res.json(info));
 }
 
 function getProject(req, res) {
