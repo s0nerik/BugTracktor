@@ -17,7 +17,8 @@ function listProjects(req, res) {
 }
 
 function getProject(req, res) {
-  T.projects.get(req.swagger.params.projectId.value).then(data => res.json(data));
+  T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
+            .then(info => res.json(info));
 }
 
 function updateProject(req, res) {
