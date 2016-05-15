@@ -1,10 +1,6 @@
 'use strict';
 
 module.exports = {
-  list_projects: {
-    request_method: "GET",
-    request_url: ""
-  },
   create_project: {
     request_method: "POST",
     request_url: ""

@@ -1,5 +1,4 @@
 module.exports = {
-  listProjects: ["list_projects"],
   createProject: ["create_project"],
   getProject: ["get_project"],
   updateProject: ["update_project"],
