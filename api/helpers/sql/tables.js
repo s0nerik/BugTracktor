@@ -310,6 +310,20 @@ var T = {
       table.primary(["role_id", "permission_name"]);
     },
   },
+  user_permissions: {
+    name: "user_permissions",
+    fields: ["user_id", "permission_name"],
+    init: table => {
+      table.integer("user_id")
+           .references("id")
+           .inTable(T.users.name);
+      table.string("permission_name")
+           .references("name")
+           .inTable(T.permissions.name);
+
+      table.primary(["user_id", "permission_name"]);
+    },
+  },
   users: {
     name: "Users",
     fields: ["id", "email", "password", "nickname", "real_name"],
