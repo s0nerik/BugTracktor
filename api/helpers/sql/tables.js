@@ -58,6 +58,20 @@ function take_fields(obj, fields) {
   return newObj;
 }
 
+function to_array_of_values(arrayOfObjects) {
+  var arr = [];
+  for (var obj in arrayOfObjects) {
+    if (arrayOfObjects[obj] instanceof Object) {
+      for (var key in arrayOfObjects[obj]) {
+        arr.push(arrayOfObjects[obj][key]);
+      }
+    } else {
+      arr.push(arrayOfObjects[obj]);
+    }
+  }
+  return arr;
+}
+
 /**
  * Take only specified fields
  */
@@ -288,13 +302,21 @@ var T = {
       return table(T.permissions).insert(permissions.asArray());
     },
     get_by_token: (token, projectId) =>
-      table(T.permissions)
-        .distinct(T.permissions.name+".name")
+      table(T.role_permissions)
+        .distinct("permission_name")
         .innerJoin(T.tokens.name, T.tokens.name+".token", token)
         .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", T.tokens.name+".user_id")
                                                                   .andOn(T.project_member_roles.name+".project_id", projectId)})
-        .innerJoin(T.role_permissions.name, T.role_permissions.name+".permission_name", T.permissions.name+".name")
-        .then(data => without_nulls(data)),
+        .union(function() {
+          this.distinct("permission_name")
+              .from(T.user_permissions.name)
+              .where("user_id", function() {
+                this.select("user_id")
+                    .from(T.tokens.name)
+                    .where("token", token)
+              })
+        })
+        .then(data => without_nulls(to_array_of_values(data))),
   },
   role_permissions: {
     name: "role_permissions",
