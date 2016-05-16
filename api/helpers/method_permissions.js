@@ -6,5 +6,6 @@ module.exports = {
 
   // listIssues: ["list_issues"],
   createIssue: ["create_issue"],
+  updateIssue: ["update_issue"],
   // getIssue: ["get_issue"],
 }
