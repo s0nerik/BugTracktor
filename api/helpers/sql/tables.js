@@ -140,7 +140,8 @@ var T = {
       table.string("full_description");
       table.timestamps();
     },
-    new: project => insert_without(T.projects, project, ["id", "members", "issues"]),
+    new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
+                                .then(data => T.project_creators.new(userId, data.id).return(data)),
     update: project => update_where_id(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => get_with_id(T.projects, id),
     get_user_projects: user => table(T.projects).select()
@@ -156,7 +157,23 @@ var T = {
                                                                   })
                                                                   .andWhere("id", projectId)
                                                                   .then(data => without_nulls(data)),
-    remove: id => remove_with_id(T.projects, id),
+    remove: id => remove_with_id(T.projects, id).then(data => T.project_creators.remove_by_project_id(id)),
+  },
+  project_creators: {
+    name: "project_creators",
+    fields: ["user_id", "project_id"],
+    init: table => {
+      table.integer("user_id");
+      table.integer("project_id");
+
+      table.primary(["user_id", "project_id"]);
+    },
+    new: (userId, projectId) => table(T.project_creators).insert({user_id: userId, project_id: projectId}),
+    remove_by_project_id: projectId => table(T.project_creators).where("project_id", projectId).del(),
+    remove_by_user_id: userId => table(T.project_creators).where("user_id", userId).del(),
+    is_creator: (userId, projectId) => table(T.project_creators).where("user_id", userId)
+                                                                .andWhere("project_id", projectId)
+                                                                .then(data => !(!data || data.length === 0)),
   },
   issue_types: {
     name: "Issue_Types",

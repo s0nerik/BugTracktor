@@ -37,9 +37,16 @@ function updateProject(req, res) {
 }
 
 function createProject(req, res) {
-  T.projects.new(req.swagger.params.project.value).then(data => res.json(data));
+  T.projects.new(req.user.id, req.swagger.params.project.value).then(data => res.json(data));
 }
 
 function deleteProject(req, res) {
-  T.projects.remove(req.swagger.params.projectId.value).then(data => res.json(data));
+  T.project_creators.is_creator(req.user.id, req.swagger.params.projectId.value)
+                        .then(isCreator => {
+                          if (isCreator) {
+                            T.projects.remove(req.swagger.params.projectId.value).then(data => res.json({message: "Success"}));
+                          } else {
+                            res.status(403).json({message: "Only project creator can delete the project."});
+                          }
+                        })
 }
