@@ -4,7 +4,7 @@ module.exports = {
   updateProject: ["update_project"],
   // deleteProject: ["delete_project"],
 
-  listIssues: ["list_issues"],
+  // listIssues: ["list_issues"],
   createIssue: ["create_issue"],
-  getIssue: ["get_issue"],
+  // getIssue: ["get_issue"],
 }
