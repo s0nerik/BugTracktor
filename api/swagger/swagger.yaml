@@ -240,6 +240,7 @@ paths:
           schema:
             $ref: "#/definitions/Issue"
     patch:
+      operationId: updateIssue
       description: |
         Updates an issue with a new data (should produce a new IssueChange).
       parameters:

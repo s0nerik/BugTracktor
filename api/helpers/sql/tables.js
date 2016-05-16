@@ -54,7 +54,9 @@ function take_fields(obj, fields) {
         newObj[key] = take_fields(obj[key], fields);
       }
     } else if (obj[key] instanceof Object) {
-      newObj[key] = take_fields(obj[key], fields);
+      if (Object.keys(obj[key]).length > 0) {
+        newObj[key] = take_fields(obj[key], fields);
+      }
     } else if (fields.indexOf(key) >= 0) {
       newObj[key] = obj[key];
     }
