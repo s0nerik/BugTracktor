@@ -1,6 +1,7 @@
 'use strict';
 
 var T = require('../helpers/sql/tables');
+var utils = require('../helpers/utils');
 
 module.exports = {
   listIssues: listIssues,
@@ -41,6 +42,10 @@ function updateIssue(req, res) {
   T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
                   .then(issue => {
                     if (issue) {
+                      // TODO: save change types into the table
+                      console.log("Old Issue: "+JSON.stringify(issue));
+                      console.log("New Issue: "+JSON.stringify(req.swagger.params.issue.value));
+                      console.log("Diff: "+JSON.stringify(utils.keyValueDiffs(issue, req.swagger.params.issue.value)));
                       req.swagger.params.issue.value.id = issue.id;
                       T.issues.update(req.swagger.params.issue.value)
                               .then(info => res.json(info));
