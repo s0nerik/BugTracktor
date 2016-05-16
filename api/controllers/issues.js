@@ -42,7 +42,7 @@ function updateIssue(req, res) {
   T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
                   .then(issue => {
                     if (issue) {
-                      // TODO: save change types into the table
+                      // TODO: save change diffs into the table
                       console.log("Old Issue: "+JSON.stringify(issue));
                       console.log("New Issue: "+JSON.stringify(req.swagger.params.issue.value));
                       console.log("Diff: "+JSON.stringify(utils.keyValueDiffs(issue, req.swagger.params.issue.value)));
