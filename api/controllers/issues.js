@@ -42,12 +42,22 @@ function updateIssue(req, res) {
   T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
                   .then(issue => {
                     if (issue) {
-                      // TODO: save change diffs into the table
+                      var diffs = utils.keyValueDiffs(issue, req.swagger.params.issue.value);
                       console.log("Old Issue: "+JSON.stringify(issue));
                       console.log("New Issue: "+JSON.stringify(req.swagger.params.issue.value));
-                      console.log("Diff: "+JSON.stringify(utils.keyValueDiffs(issue, req.swagger.params.issue.value)));
+                      console.log("Diff: "+JSON.stringify(diffs));
+
                       req.swagger.params.issue.value.id = issue.id;
                       T.issues.update(req.swagger.params.issue.value)
+                              .then(info => {
+                                // TODO: save actual diff type into the table
+                                if (Object.keys(diffs).length > 0) {
+                                  return T.issue_changes.new({issue_id: issue.id, date: new Date().toISOString(), author_id: req.user.id})
+                                                        .return(info);
+                                } else {
+                                  return info;
+                                }
+                              })
                               .then(info => res.json(info));
                     } else {
                       res.status(404).json({message: "Issue not found."});

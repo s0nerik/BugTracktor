@@ -79,7 +79,7 @@ function to_array_of_values(arrayOfObjects) {
 }
 
 /**
- * Take only specified fields
+ * Insert without given fields.
  */
 function insert_without(table, obj, fields) {
   return knex.insert(without_fields(obj, fields))
@@ -260,14 +260,14 @@ var T = {
   },
   issue_changes: {
     name: "Issue_Changes",
-    fields: ["issue_id", "date", "description", "change_type_id", "author_id", "creation_date"],
+    fields: ["issue_id", "date", "description", "change_type_id", "author_id"],
     foreignFields: ["project", "type", "history"],
     init: table => {
       table.integer("issue_id")
            .references("id")
            .inTable(T.issues.name);
 
-      table.date("date");
+      table.dateTime("date");
       table.string("description");
 
       table.integer("change_type_id")
@@ -278,14 +278,16 @@ var T = {
            .inTable(T.project_members.name);
 
       table.primary(["issue_id", "date"]);
-
-      table.timestamps();
     },
     get: (issueId, date) => { // issueId -> NotNull
       var where = date ? { "date": date, "issue_id": issueId } : { "issue_id": issueId };
       var query = table(T.issue_changes).select().where(where);
       if (date) query = query.first();
       return query.then(data => without_nulls(data, true));
+    },
+    new: change => {
+      var onlyWithNeededFields = take_fields(change, T.issue_changes.fields);
+      return table(T.issue_changes).insert(onlyWithNeededFields).return(onlyWithNeededFields)
     },
   },
   issue_change_types: {
