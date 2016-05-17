@@ -178,13 +178,12 @@ var T = {
                                                                 .then(data => !(!data || data.length === 0)),
   },
   issue_types: {
-    name: "Issue_Types",
+    name: "issue_types",
     fields: ["id", "name", "description"],
     init: table => {
       table.increments("id");
       table.string("name");
       table.string("description");
-      table.timestamps();
     }
   },
   issues: {

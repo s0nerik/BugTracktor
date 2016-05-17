@@ -49,6 +49,13 @@ parameters:
     required: true
     type: integer
     format: int64
+  issueTypeIdParam:
+    in: path
+    name: issueTypeId
+    description: ID of the issue type to operate with.
+    required: true
+    type: integer
+    format: int64
   issueIndexParam:
     in: path
     name: issueIndex
@@ -274,7 +281,69 @@ paths:
             type: array
             items:
               $ref: "#/definitions/IssueChange"
-
+  /projects/{projectId}/issueTypes:
+    x-swagger-router-controller: issue_types
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+    get:
+      operationId: listIssueTypes
+      description: |
+        Gets a list of issue types for a given project.
+      parameters:
+        - $ref: "#/parameters/limitQueryParam"
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/IssueType"
+    post:
+      operationId: createIssueType
+      description: |
+        Creates a new issue type.
+      parameters:
+        - in: body
+          name: issueType
+          description: The issue to create.
+          required: true
+          schema:
+            $ref: '#/definitions/IssueType'
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/IssueType"
+  /projects/{projectId}/issueTypes/{issueTypeId}:
+    x-swagger-router-controller: issue_types
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+      - $ref: "#/parameters/issueTypeIdParam"
+    get:
+      operationId: getIssueType
+      description: Gets an issue types with a given id for a given project.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/IssueType"
+    patch:
+      operationId: updateIssueType
+      description: Updates an issue type.
+      parameters:
+        - in: body
+          name: issueType
+          description: The issue to create.
+          required: true
+          schema:
+            $ref: '#/definitions/IssueType'
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/IssueType"
 
 ## Data classes
 
