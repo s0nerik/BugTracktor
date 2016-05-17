@@ -8,6 +8,7 @@ module.exports = {
   createIssue: createIssue,
   getIssue: getIssue,
   updateIssue: updateIssue,
+  getIssueChanges: getIssueChanges,
 };
 
 function listIssues(req, res) {
@@ -52,7 +53,12 @@ function updateIssue(req, res) {
                               .then(info => {
                                 // TODO: save actual diff type into the table
                                 if (Object.keys(diffs).length > 0) {
-                                  return T.issue_changes.new({issue_id: issue.id, date: new Date().toISOString(), author_id: req.user.id})
+                                  var change = Object.assign({
+                                    issue_id: issue.id,
+                                    date: new Date().toISOString(),
+                                    author_id: req.user.id
+                                  }, { change: JSON.stringify(utils.produceIssueChangeInfo(diffs)) });
+                                  return T.issue_changes.new(change)
                                                         .return(info);
                                 } else {
                                   return info;
@@ -63,4 +69,23 @@ function updateIssue(req, res) {
                       res.status(404).json({message: "Issue not found."});
                     }
                   });
+}
+
+function getIssueChanges(req, res) {
+  T.project_members.check_member(req.user.id, req.swagger.params.projectId.value)
+                   .then(isMember => {
+                     if (isMember) {
+                       T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
+                                       .then(issue => {
+                                         if (issue) {
+                                          T.issue_changes.get(issue.id)
+                                                         .then(info => res.json(info));
+                                         } else {
+                                           res.status(404).json({message: "Requested issue is not found."});
+                                         }
+                                       });
+                     } else {
+                       res.status(403).json({message: "You must be a project member to see its issue changes."});
+                     }
+                   })
 }

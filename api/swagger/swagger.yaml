@@ -256,6 +256,7 @@ paths:
           schema:
             $ref: "#/definitions/Issue"
   /projects/{projectId}/issues/{issueIndex}/changes:
+    x-swagger-router-controller: issues
     parameters:
       - $ref: "#/parameters/projectIdParam"
       - $ref: "#/parameters/issueIndexParam"
@@ -263,6 +264,7 @@ paths:
       - $ref: "#/parameters/fromDateQueryParam"
       - $ref: "#/parameters/toDateQueryParam"
     get:
+      operationId: getIssueChanges
       description: |
         Gets changes of the given issue.
       responses:
@@ -363,31 +365,16 @@ definitions:
   IssueChange:
     type: object
     properties:
-      issue:
-        $ref: "#/definitions/Issue"
+      issue_id:
+        type: integer
+      author_id:
+        type: integer
       date:
         type: string
-        format: date
-      changeType:
-        $ref: "#/definitions/IssueChangeType"
-      author:
-        $ref: "#/definitions/ProjectMember"
-      description:
+        format: dateTime
+      change:
         type: string
-        description: Issue change description.
-  IssueChangeType:
-    type: object
-    properties:
-      id:
-        type: integer
-      project:
-        $ref: "#/definitions/Project"
-      name:
-        type: string
-        description: Name of the type of change.
-      description:
-        type: string
-        description: Description of this type of change.
+        format: json
   Role:
     type: object
     properties:

@@ -259,23 +259,21 @@ var T = {
     }
   },
   issue_changes: {
-    name: "Issue_Changes",
-    fields: ["issue_id", "date", "description", "change_type_id", "author_id"],
-    foreignFields: ["project", "type", "history"],
+    name: "issue_changes",
+    fields: ["issue_id", "date", "author_id", "change"],
+    foreignFields: ["project", "type"],
     init: table => {
       table.integer("issue_id")
            .references("id")
            .inTable(T.issues.name);
 
-      table.dateTime("date");
-      table.string("description");
+     table.integer("author_id")
+          .references("id")
+          .inTable(T.project_members.name);
 
-      table.integer("change_type_id")
-           .references("id")
-           .inTable(T.issue_change_types.name);
-      table.integer("author_id")
-           .references("id")
-           .inTable(T.project_members.name);
+      table.dateTime("date");
+
+      table.string("change");
 
       table.primary(["issue_id", "date"]);
     },
@@ -288,21 +286,6 @@ var T = {
     new: change => {
       var onlyWithNeededFields = take_fields(change, T.issue_changes.fields);
       return table(T.issue_changes).insert(onlyWithNeededFields).return(onlyWithNeededFields)
-    },
-  },
-  issue_change_types: {
-    name: "Issue_Change_Types",
-    fields: ["id", "project_id", "name", "description"],
-    init: table => {
-      table.increments("id");
-      table.integer("project_id")
-           .references("id")
-           .inTable(T.projects.name);
-
-      table.string("name");
-      table.string("description");
-
-      table.timestamps();
     },
   },
   roles: {
