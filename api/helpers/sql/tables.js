@@ -88,6 +88,16 @@ function insert_without(table, obj, fields) {
             .then(data => without_nulls(data, true));
 }
 
+/**
+ * Insert only given fields.
+ */
+function insert_only(table, obj, fields) {
+  return knex.insert(take_fields(obj, fields))
+            .into(table.name)
+            .then(ids => table.get(ids[0]))
+            .then(data => without_nulls(data, true));
+}
+
 function update_where_id(table, object, fields) {
   return knex.where("id", "=", object.id)
               .update(without_nulls(take_fields(object, fields)))
@@ -184,7 +194,9 @@ var T = {
       table.increments("id");
       table.string("name");
       table.string("description");
-    }
+    },
+    new: issueType => insert_only(T.issue_types, issueType, ["name", "description"]),
+    get: issueTypeId => get_with_id(T.issue_types, issueTypeId),
   },
   project_issue_types: {
     name: "project_issue_types",
@@ -199,6 +211,10 @@ var T = {
                                       .select(T.issue_types.fields)
                                       .where("project_id", projectId)
                                       .innerJoin(T.issue_types.name, "project_issue_types.issue_type_id", "issue_types.id"),
+    new: (projectId, issueTypeId) => {
+      var obj = {project_id: projectId, issue_type_id: issueTypeId};
+      return table(T.project_issue_types).insert(obj).return(obj);
+    },
   },
   issues: {
     name: "Issues",
