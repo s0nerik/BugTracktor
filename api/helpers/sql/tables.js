@@ -186,6 +186,20 @@ var T = {
       table.string("description");
     }
   },
+  project_issue_types: {
+    name: "project_issue_types",
+    fields: ["project_id", "issue_type_id"],
+    init: table => {
+      table.integer("project_id");
+      table.integer("issue_type_id");
+
+      table.primary(["project_id", "issue_type_id"]);
+    },
+    get_for_project_id: projectId => table(T.project_issue_types)
+                                      .select(T.issue_types.fields)
+                                      .where("project_id", projectId)
+                                      .innerJoin(T.issue_types.name, "project_issue_types.issue_type_id", "issue_types.id"),
+  },
   issues: {
     name: "Issues",
     fields: ["id", "type_id", "short_description", "full_description", "creation_date"],
