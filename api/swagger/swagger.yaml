@@ -11,7 +11,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 
-host: warm-ravine-13190.herokuapp.com
+host: bug-tracktor.herokuapp.com
 basePath: /v1
 schemes:
   - http
