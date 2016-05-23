@@ -190,10 +190,12 @@ var T = {
     init: table => {
       table.integer("user_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.users.name);
       table.integer("project_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.projects.name);
 
@@ -224,10 +226,12 @@ var T = {
     init: table => {
       table.integer("project_id")
             .unsigned()
+            .notNullable()
             .references("id")
             .inTable(T.projects.name);
       table.integer("issue_type_id")
             .unsigned()
+            .notNullable()
             .references("id")
             .inTable(T.issue_types.name);
 
@@ -251,6 +255,7 @@ var T = {
 
       table.integer("type_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.issue_types.name);
 
@@ -270,11 +275,13 @@ var T = {
     init: table => {
       table.integer("project_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.projects.name);
 
       table.integer("issue_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.issues.name);
 
@@ -361,10 +368,10 @@ var T = {
     init: table => {
       table.integer("role_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.roles.name);
       table.string("permission_name")
-            .unsigned()
            .references("name")
            .inTable(T.permissions.name);
 
@@ -377,11 +384,13 @@ var T = {
     init: table => {
       table.integer("user_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.users.name);
 
       table.integer("project_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.projects.name);
 
@@ -403,16 +412,19 @@ var T = {
     init: table => {
       table.integer("user_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.users.name);
 
       table.integer("project_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.projects.name);
 
       table.integer("role_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.roles.name);
 
@@ -426,11 +438,13 @@ var T = {
     init: table => {
       table.integer("issue_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.issues.name);
 
      table.integer("author_id")
           .unsigned()
+          .notNullable()
           .references("id")
           .inTable(T.project_members.name);
 
