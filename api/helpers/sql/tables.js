@@ -372,8 +372,8 @@ var T = {
            .references("id")
            .inTable(T.roles.name);
       table.string("permission_name")
+            .notNullable()
            .references("name")
-           .notNullable()
            .inTable(T.permissions.name);
 
       table.primary(["role_id", "permission_name"]);
