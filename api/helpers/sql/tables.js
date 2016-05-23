@@ -334,12 +334,12 @@ var T = {
     fields: ["name", "request_method", "request_url"],
     clearOnInit: true,
     init: table => {
-      table.string("name");
+      table.string("name").notNullable().primary();
 
       table.string("request_method");
       table.string("request_url");
 
-      table.primary("name");
+      // table.primary("name");
     },
     afterInit: () => {
       var permissions = require('./permissions');
@@ -373,6 +373,7 @@ var T = {
            .inTable(T.roles.name);
       table.string("permission_name")
            .references("name")
+           .notNullable()
            .inTable(T.permissions.name);
 
       table.primary(["role_id", "permission_name"]);
