@@ -60,14 +60,24 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
 
 app.use(cors());
 
-GLOBAL.knex = require('knex')({
-  client: 'sqlite3',
-  connection: {
-    filename: "./db.sqlite"
-  },
-  // useNullAsDefault: true,
-  debug: true
-});
+if (process.env.DEV) {
+  GLOBAL.knex = require('knex')({
+    client: 'sqlite3',
+    connection: {
+      filename: "./db.sqlite"
+    },
+    // useNullAsDefault: true,
+    debug: true
+  });
+} else {
+  GLOBAL.knex = require('knex')({
+    client: 'pg',
+    connection: process.env.DATABASE_URL,
+    searchPath: 'knex,public',
+    // useNullAsDefault: true,
+    debug: true
+  });
+}
 
 // tables.dropAllTables(knex);
 tables.createAllTables(knex);
