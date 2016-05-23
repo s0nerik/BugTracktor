@@ -150,6 +150,7 @@ var T = {
       table.string("password");
       table.string("nickname");
       table.string("real_name");
+      table.primary("id");
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
@@ -164,6 +165,7 @@ var T = {
       table.string("name");
       table.string("short_description");
       table.string("full_description");
+      table.primary("id");
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
                                 .then(data => T.project_creators.new(userId, data.id).return(data)),
@@ -211,6 +213,7 @@ var T = {
       table.increments("id");
       table.string("name");
       table.string("description");
+      table.primary("id");
     },
     new: issueType => insert_only(T.issue_types, issueType, ["name", "description"]),
     get: issueTypeId => get_with_id(T.issue_types, issueTypeId),
@@ -252,6 +255,8 @@ var T = {
       table.date("creation_date");
       table.string("short_description");
       table.string("full_description");
+
+      table.primary("id");
     },
     new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
@@ -313,6 +318,8 @@ var T = {
 
       table.string("name");
       table.string("description");
+
+      table.primary("id");
     },
   },
   permissions: { // Predefined permissions table
