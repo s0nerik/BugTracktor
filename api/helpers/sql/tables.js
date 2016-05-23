@@ -472,6 +472,7 @@ var T = {
     init: table => {
       table.integer("user_id")
             .unsigned()
+            .notNullable()
            .references("id")
            .inTable(T.users.name);
 
