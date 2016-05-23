@@ -150,7 +150,6 @@ var T = {
       table.string("password");
       table.string("nickname");
       table.string("real_name");
-      table.primary("id");
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
@@ -165,7 +164,6 @@ var T = {
       table.string("name");
       table.string("short_description");
       table.string("full_description");
-      table.primary("id");
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
                                 .then(data => T.project_creators.new(userId, data.id).return(data)),
@@ -191,9 +189,11 @@ var T = {
     fields: ["user_id", "project_id"],
     init: table => {
       table.integer("user_id")
+            .unsigned()
            .references("id")
            .inTable(T.users.name);
       table.integer("project_id")
+            .unsigned()
            .references("id")
            .inTable(T.projects.name);
 
@@ -213,7 +213,6 @@ var T = {
       table.increments("id");
       table.string("name");
       table.string("description");
-      table.primary("id");
     },
     new: issueType => insert_only(T.issue_types, issueType, ["name", "description"]),
     get: issueTypeId => get_with_id(T.issue_types, issueTypeId),
@@ -224,9 +223,11 @@ var T = {
     fields: ["project_id", "issue_type_id"],
     init: table => {
       table.integer("project_id")
+            .unsigned()
             .references("id")
             .inTable(T.projects.name);
       table.integer("issue_type_id")
+            .unsigned()
             .references("id")
             .inTable(T.issue_types.name);
 
@@ -249,14 +250,13 @@ var T = {
       table.increments("id");
 
       table.integer("type_id")
+            .unsigned()
            .references("id")
            .inTable(T.issue_types.name);
 
       table.date("creation_date");
       table.string("short_description");
       table.string("full_description");
-
-      table.primary("id");
     },
     new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
@@ -269,10 +269,12 @@ var T = {
     foreignFields: ["project", "type", "history"],
     init: table => {
       table.integer("project_id")
+            .unsigned()
            .references("id")
            .inTable(T.projects.name);
 
       table.integer("issue_id")
+            .unsigned()
            .references("id")
            .inTable(T.issues.name);
 
@@ -318,8 +320,6 @@ var T = {
 
       table.string("name");
       table.string("description");
-
-      table.primary("id");
     },
   },
   permissions: { // Predefined permissions table
@@ -360,9 +360,11 @@ var T = {
     fields: ["role_id", "permission_name"],
     init: table => {
       table.integer("role_id")
+            .unsigned()
            .references("id")
            .inTable(T.roles.name);
       table.string("permission_name")
+            .unsigned()
            .references("name")
            .inTable(T.permissions.name);
 
@@ -374,10 +376,12 @@ var T = {
     fields: ["user_id", "project_id", "join_date"],
     init: table => {
       table.integer("user_id")
+            .unsigned()
            .references("id")
            .inTable(T.users.name);
 
       table.integer("project_id")
+            .unsigned()
            .references("id")
            .inTable(T.projects.name);
 
@@ -398,14 +402,17 @@ var T = {
     fields: ["user_id", "project_id", "role_id"],
     init: table => {
       table.integer("user_id")
+            .unsigned()
            .references("id")
            .inTable(T.users.name);
 
       table.integer("project_id")
+            .unsigned()
            .references("id")
            .inTable(T.projects.name);
 
       table.integer("role_id")
+            .unsigned()
            .references("id")
            .inTable(T.roles.name);
 
@@ -418,10 +425,12 @@ var T = {
     foreignFields: ["project", "type"],
     init: table => {
       table.integer("issue_id")
+            .unsigned()
            .references("id")
            .inTable(T.issues.name);
 
      table.integer("author_id")
+          .unsigned()
           .references("id")
           .inTable(T.project_members.name);
 
@@ -447,6 +456,7 @@ var T = {
     fields: ["user_id", "token", "updated_at"],
     init: table => {
       table.integer("user_id")
+            .unsigned()
            .references("id")
            .inTable(T.users.name);
 
