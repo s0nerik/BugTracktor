@@ -19,7 +19,11 @@ var config = {
   appRoot: __dirname, // required config
   swaggerSecurityHandlers: {
     api_key: (req, authOrSecDef, scopesOrApiKey, callback) => {
-      var query = Promise.resolve(true);
+      var isTokenValid = false;
+
+      var query = tables.tokens.check_valid(scopesOrApiKey)
+                               .then(isValid => isTokenValid = isValid);
+
       query = query.then(data => tables.tokens.get_user_by_token(scopesOrApiKey))
                    .then(user => req.user = user);
 
@@ -29,9 +33,12 @@ var config = {
         query = query.then(data => tables.permissions.get_by_token(scopesOrApiKey, 0));
       }
 
-      return query.then(data => {
-        // callback with no arguments if allow, and with object if disallow
-        if (!methodPermissions[req.swagger.operation.operationId] || (data && containsAll(data, methodPermissions[req.swagger.operation.operationId]))) {
+      return query.then(permissions => { // callback with no arguments if allow, and with object if disallow
+        // if token is invalid - return a message with explanation.
+        if (!isTokenValid) {
+          callback({message: "Auth Token isn't valid."});
+        // check user's permissions
+        } else if (!methodPermissions[req.swagger.operation.operationId] || (permissions && containsAll(permissions, methodPermissions[req.swagger.operation.operationId]))) {
           callback();
         } else {
           callback({});

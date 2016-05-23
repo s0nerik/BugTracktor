@@ -484,6 +484,20 @@ var T = {
     get_user_by_token: token => table(T.tokens).first()
                                               .innerJoin(T.users.name, "tokens.user_id", "users.id")
                                               .then(data => without_nulls(take_fields(data, T.users.fields))),
+    check_valid: token => table(T.tokens).first()
+                                         .where("token", token)
+                                         .then(tokenData => {
+                                           if (tokenData) {
+                                             var lastUpdatedDate = new Date(tokenData.updated_at);
+                                             var currentDate = new Date();
+                                             var diffHours = parseInt((currentDate - lastUpdatedDate) / (1000 * 60 * 60));
+                                             console.log("diffHours: "+diffHours);
+                                             // If difference is more than 6 hours - token is invalid
+                                             return diffHours < 6;
+                                           } else {
+                                             return false;
+                                           }
+                                         }),
   },
 
   /*
