@@ -69,6 +69,13 @@ if (process.env.DEV) {
     // useNullAsDefault: true,
     debug: true
   });
+} else if (process.env.JAWSDB_URL) {
+  GLOBAL.knex = require('knex')({
+    client: 'mysql',
+    connection: process.env.JAWSDB_URL,
+    // useNullAsDefault: true,
+    debug: true
+  });
 } else if (process.env.JAWSDB_MARIA_URL) {
   GLOBAL.knex = require('knex')({
     client: 'mysql',
