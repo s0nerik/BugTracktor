@@ -446,7 +446,7 @@ var T = {
      table.integer("author_id")
           .unsigned()
           .notNullable()
-          .references("id")
+          .references("user_id")
           .inTable(T.project_members.name);
 
       table.dateTime("date").notNullable();
