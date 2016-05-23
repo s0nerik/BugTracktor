@@ -449,7 +449,7 @@ var T = {
           .references("id")
           .inTable(T.project_members.name);
 
-      table.dateTime("date");
+      table.dateTime("date").notNullable();
 
       table.string("change");
 
