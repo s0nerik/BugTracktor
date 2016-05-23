@@ -95,8 +95,11 @@ if (process.env.DEV) {
   });
 }
 
-// tables.dropAllTables(knex);
-tables.createAllTables(knex);
+if (process.env.DROP_TABLES) {
+  tables.dropAllTables(knex).then(data => tables.createAllTables(knex));
+} else {
+  tables.createAllTables(knex)
+}
 
 Date.prototype.addMinutes = function(minutes) {
     var copiedDate = new Date(this.getTime());

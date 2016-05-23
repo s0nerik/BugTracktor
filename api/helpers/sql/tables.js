@@ -502,7 +502,8 @@ var T = {
     var query = Promise.resolve(true);
     for (var key in T) {
       if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
-        query = query.then(data => knex.schema.dropTableIfExists(T[key].name));
+        let tbl = T[key];
+        query = query.then(data => knex.schema.dropTableIfExists(tbl.name));
       }
     }
     return query;
