@@ -197,6 +197,7 @@ var T = {
     },
     new: issueType => insert_only(T.issue_types, issueType, ["name", "description"]),
     get: issueTypeId => get_with_id(T.issue_types, issueTypeId),
+    update: issueType => update_where_id(T.issue_types, issueType, ["name", "description"]),
   },
   project_issue_types: {
     name: "project_issue_types",
