@@ -36,7 +36,15 @@ function createIssueType(req, res) {
 }
 
 function getIssueType(req, res) {
-
+  T.project_members.check_member(req.user.id, req.swagger.params.projectId.value)
+                   .then(isMember => {
+                     if (isMember) {
+                        T.issue_types.get(req.swagger.params.issueTypeId.value)
+                                     .then(info => res.json(info));
+                     } else {
+                       res.status(403).json({message: "You must be a project member to get an issue type with this id."});
+                     }
+                   });
 }
 
 function updateIssueType(req, res) {
