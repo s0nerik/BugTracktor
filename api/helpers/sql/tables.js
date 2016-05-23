@@ -141,6 +141,20 @@ function table(table) {
 }
 
 var T = {
+  users: {
+    name: "users",
+    fields: ["id", "email", "password", "nickname", "real_name"],
+    init: table => {
+      table.increments("id");
+      table.string("email");
+      table.string("password");
+      table.string("nickname");
+      table.string("real_name");
+    },
+    new: user => insert_without(T.users, user, ["id"]),
+    get: id => get_with_id(T.users, id),
+    get_with_email: email => get_with_field_value(T.users, "email", email),
+  },
   projects: {
     name: "projects",
     fields: ["id", "name", "short_description", "full_description"],
@@ -150,7 +164,6 @@ var T = {
       table.string("name");
       table.string("short_description");
       table.string("full_description");
-      table.timestamps();
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
                                 .then(data => T.project_creators.new(userId, data.id).return(data)),
@@ -175,8 +188,12 @@ var T = {
     name: "project_creators",
     fields: ["user_id", "project_id"],
     init: table => {
-      table.integer("user_id");
-      table.integer("project_id");
+      table.integer("user_id")
+           .references("id")
+           .inTable(T.users.name);
+      table.integer("project_id")
+           .references("id")
+           .inTable(T.projects.name);
 
       table.primary(["user_id", "project_id"]);
     },
@@ -203,8 +220,12 @@ var T = {
     name: "project_issue_types",
     fields: ["project_id", "issue_type_id"],
     init: table => {
-      table.integer("project_id");
-      table.integer("issue_type_id");
+      table.integer("project_id")
+            .references("id")
+            .inTable(T.projects.name);
+      table.integer("issue_type_id")
+            .references("id")
+            .inTable(T.issue_types.name);
 
       table.primary(["project_id", "issue_type_id"]);
     },
@@ -231,8 +252,6 @@ var T = {
       table.date("creation_date");
       table.string("short_description");
       table.string("full_description");
-
-      table.timestamps();
     },
     new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
@@ -255,8 +274,6 @@ var T = {
       table.integer("issue_index");
 
       table.primary(["project_id", "issue_id"]);
-
-      table.timestamps();
     },
     new: (projectId, issue) =>
       // Create issue
@@ -296,8 +313,6 @@ var T = {
 
       table.string("name");
       table.string("description");
-
-      table.timestamps();
     },
   },
   permissions: { // Predefined permissions table
@@ -347,36 +362,6 @@ var T = {
       table.primary(["role_id", "permission_name"]);
     },
   },
-  user_permissions: {
-    name: "user_permissions",
-    fields: ["user_id", "permission_name"],
-    init: table => {
-      table.integer("user_id")
-           .references("id")
-           .inTable(T.users.name);
-      table.string("permission_name")
-           .references("name")
-           .inTable(T.permissions.name);
-
-      table.primary(["user_id", "permission_name"]);
-    },
-  },
-  users: {
-    name: "users",
-    fields: ["id", "email", "password", "nickname", "real_name"],
-    init: table => {
-      table.increments("id");
-      table.string("email");
-      table.string("password");
-      table.string("nickname");
-      table.string("real_name");
-
-      table.timestamps();
-    },
-    new: user => insert_without(T.users, user, ["id"]),
-    get: id => get_with_id(T.users, id),
-    get_with_email: email => get_with_field_value(T.users, "email", email),
-  },
   project_members: {
     name: "project_members",
     fields: ["user_id", "project_id", "join_date"],
@@ -418,8 +403,6 @@ var T = {
            .inTable(T.roles.name);
 
       table.primary(["user_id", "project_id", "role_id"]);
-
-      table.timestamps();
     },
   },
   issue_changes: {
@@ -463,7 +446,7 @@ var T = {
       table.string("token");
       table.dateTime("updated_at");
 
-      table.primary(["user_id"]);
+      table.primary("user_id");
     },
     update_token_for_user_id: userId => {
       var token = {
