@@ -142,7 +142,7 @@ function table(table) {
 
 var T = {
   projects: {
-    name: "Projects",
+    name: "projects",
     fields: ["id", "name", "short_description", "full_description"],
     foreignFields: ["members", "issues"],
     init: table => {
@@ -218,7 +218,7 @@ var T = {
     },
   },
   issues: {
-    name: "Issues",
+    name: "issues",
     fields: ["id", "type_id", "short_description", "full_description", "creation_date"],
     foreignFields: ["project", "type", "history"],
     init: table => {
@@ -240,7 +240,7 @@ var T = {
     remove: id => remove_with_id(T.issues, id),
   },
   project_issues: {
-    name: "Project_Issues",
+    name: "project_issues",
     fields: ["project_id", "issue_id", "issue_index"],
     foreignFields: ["project", "type", "history"],
     init: table => {
@@ -288,38 +288,8 @@ var T = {
       return query.then(data => without_nulls(take_fields(data, T.issues.fields + ["issue_index"]), true));
     }
   },
-  issue_changes: {
-    name: "issue_changes",
-    fields: ["issue_id", "date", "author_id", "change"],
-    foreignFields: ["project", "type"],
-    init: table => {
-      table.integer("issue_id")
-           .references("id")
-           .inTable(T.issues.name);
-
-     table.integer("author_id")
-          .references("id")
-          .inTable(T.project_members.name);
-
-      table.dateTime("date");
-
-      table.string("change");
-
-      table.primary(["issue_id", "date"]);
-    },
-    get: (issueId, date) => { // issueId -> NotNull
-      var where = date ? { "date": date, "issue_id": issueId } : { "issue_id": issueId };
-      var query = table(T.issue_changes).select().where(where);
-      if (date) query = query.first();
-      return query.then(data => without_nulls(data, true));
-    },
-    new: change => {
-      var onlyWithNeededFields = take_fields(change, T.issue_changes.fields);
-      return table(T.issue_changes).insert(onlyWithNeededFields).return(onlyWithNeededFields)
-    },
-  },
   roles: {
-    name: "Roles",
+    name: "roles",
     fields: ["id", "name", "description"],
     init: table => {
       table.increments("id");
@@ -331,7 +301,7 @@ var T = {
     },
   },
   permissions: { // Predefined permissions table
-    name: "Permissions",
+    name: "permissions",
     fields: ["name", "request_method", "request_url"],
     clearOnInit: true,
     init: table => {
@@ -392,7 +362,7 @@ var T = {
     },
   },
   users: {
-    name: "Users",
+    name: "users",
     fields: ["id", "email", "password", "nickname", "real_name"],
     init: table => {
       table.increments("id");
@@ -408,7 +378,7 @@ var T = {
     get_with_email: email => get_with_field_value(T.users, "email", email),
   },
   project_members: {
-    name: "Project_Members",
+    name: "project_members",
     fields: ["user_id", "project_id", "join_date"],
     init: table => {
       table.integer("user_id")
@@ -432,7 +402,7 @@ var T = {
                                                                  }),
   },
   project_member_roles: {
-    name: "Project_Member_Roles",
+    name: "project_member_roles",
     fields: ["user_id", "project_id", "role_id"],
     init: table => {
       table.integer("user_id")
@@ -450,6 +420,36 @@ var T = {
       table.primary(["user_id", "project_id", "role_id"]);
 
       table.timestamps();
+    },
+  },
+  issue_changes: {
+    name: "issue_changes",
+    fields: ["issue_id", "date", "author_id", "change"],
+    foreignFields: ["project", "type"],
+    init: table => {
+      table.integer("issue_id")
+           .references("id")
+           .inTable(T.issues.name);
+
+     table.integer("author_id")
+          .references("id")
+          .inTable(T.project_members.name);
+
+      table.dateTime("date");
+
+      table.string("change");
+
+      table.primary(["issue_id", "date"]);
+    },
+    get: (issueId, date) => { // issueId -> NotNull
+      var where = date ? { "date": date, "issue_id": issueId } : { "issue_id": issueId };
+      var query = table(T.issue_changes).select().where(where);
+      if (date) query = query.first();
+      return query.then(data => without_nulls(data, true));
+    },
+    new: change => {
+      var onlyWithNeededFields = take_fields(change, T.issue_changes.fields);
+      return table(T.issue_changes).insert(onlyWithNeededFields).return(onlyWithNeededFields)
     },
   },
   tokens: {
