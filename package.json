@@ -26,6 +26,7 @@
     "test": "swagger project test"
   },
   "engines": {
-    "node": "6.0.0"
+    "node": "6.0.0",
+    "npm": "3.9.0"
   }
 }
