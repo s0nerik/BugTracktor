@@ -69,6 +69,14 @@ if (process.env.DEV) {
     // useNullAsDefault: true,
     debug: true
   });
+} else if (process.env.CLEARDB_DATABASE_URL) {
+  GLOBAL.knex = require('knex')({
+    client: 'mysql',
+    connection: process.env.CLEARDB_DATABASE_URL,
+    searchPath: 'knex,public',
+    // useNullAsDefault: true,
+    debug: true
+  });
 } else {
   GLOBAL.knex = require('knex')({
     client: 'pg',
