@@ -106,7 +106,7 @@ var prepareQuery = Promise.resolve(true);
 if (process.env.DROP_TABLES) {
   prepareQuery = prepareQuery.then(data => tables.dropAllTables(knex))
                              .then(data => tables.createAllTables(knex))
-                             .then(data => tables.fillWithTestData())
+                             .then(data => tables.fillWithTestData(knex))
 } else {
   prepareQuery = prepareQuery.then(data => tables.createAllTables(knex));
 }
