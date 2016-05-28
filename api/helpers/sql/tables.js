@@ -2,6 +2,7 @@
 
 var crypto = require('crypto');
 var Promise = require("bluebird");
+var permissions = require("../sql/permissions");
 
 /**
  * Delete all null (or undefined) properties from an object.
@@ -637,6 +638,31 @@ var T = {
       Array.prototype.push.apply(roles, projectRoles);
     }
 
+    var rolePermissions = [];
+    var givePermissions = (roleId, permissions) => {
+      for (var i in permissions) {
+        rolePermissions.push({role_id: roleId, permission_name: permissions[i]});
+      }
+    }
+    // Give admin all permissions
+    var allPermissions = permissions.asArray().map(it => it.name);
+    givePermissions(1, allPermissions);
+    // Give permissions to developers
+    [2, 2+3, 2+6, 2+9, 2+12, 2+15].forEach(it => givePermissions(it, ["get_project", "list_issues", "get_issue", "close_issue"]));
+    // Give permissions to managers
+    [3, 3+3, 3+6, 3+9, 3+12, 3+15].forEach(it => givePermissions(it, allPermissions));
+    // Give permissions to testers
+    [4, 4+3, 4+6, 4+9, 4+12, 4+15].forEach(it => givePermissions(it, allPermissions));
+
+    var projectRoles = [
+      {name: "Developer", description: "Developer"},
+      {name: "Manager", description: "Manager"},
+      {name: "Tester", description: "Tester"}
+    ];
+    for (var i in projects) {
+      Array.prototype.push.apply(roles, projectRoles);
+    }
+
     var projectMembers = [
       // Developers
       {user_id: 1, project_id: 1, join_date: new Date()},
@@ -713,6 +739,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.projects.name, projects));
     // Create roles
     query = query.then(data => knex.batchInsert(T.roles.name, roles));
+    // Assign role permissions
+    query = query.then(data => knex.batchInsert(T.role_permissions.name, rolePermissions));
     // Assign project members
     query = query.then(data => knex.batchInsert(T.project_members.name, projectMembers));
     // Assign project member roles
