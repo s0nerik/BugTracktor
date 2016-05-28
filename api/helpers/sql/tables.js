@@ -529,7 +529,10 @@ var T = {
     },
     get_for_user_id: userId => get_with_field_value(T.tokens, "user_id", userId),
     get_user_by_token: token => table(T.tokens).first()
-                                              .innerJoin(T.users.name, "tokens.user_id", "users.id")
+                                               .innerJoin(T.users.name, function () {
+                                                 this.on("tokens.user_id", "users.id")
+                                                     .andOn("tokens.token", knex.raw('?', [token]))
+                                               })
                                               .then(data => without_nulls(take_fields(data, T.users.fields))),
     check_valid: token => table(T.tokens).first()
                                          .where("token", token)
