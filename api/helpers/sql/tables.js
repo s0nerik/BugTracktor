@@ -634,7 +634,7 @@ var T = {
       {name: "Tester", description: "Tester"}
     ];
     for (var i in projects) {
-      roles.push.apply(projectRoles);
+      Array.prototype.push.apply(roles, projectRoles);
     }
 
     var projectMembers = [
