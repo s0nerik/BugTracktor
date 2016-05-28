@@ -372,6 +372,7 @@ var T = {
           .references("id")
           .inTable(T.users.name);
      table.string("permission_name")
+          .notNullable()
           .references("name")
           .inTable(T.permissions.name);
      table.primary(["user_id", "permission_name"]);
