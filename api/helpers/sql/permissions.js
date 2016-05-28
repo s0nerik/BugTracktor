@@ -41,6 +41,14 @@ module.exports = {
     request_method: "DELETE",
     request_url: ""
   },
+  assign_role: {
+    request_method: "PUT",
+    request_url: ""
+  },
+  deny_role: {
+    request_method: "PUT",
+    request_url: ""
+  },
 
   asArray: () => {
     var arr = []

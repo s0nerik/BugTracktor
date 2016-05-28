@@ -328,6 +328,9 @@ var T = {
       table.string("name");
       table.string("description");
     },
+    new: role => insert_only(T.roles, role, ["name", "description"]),
+    get: roleId => get_with_id(T.roles, roleId),
+    update: role => update_where_id(T.roles, role, ["name", "description"]),
   },
   permissions: { // Predefined permissions table
     name: "permissions",
@@ -377,6 +380,8 @@ var T = {
           .inTable(T.permissions.name);
      table.primary(["user_id", "permission_name"]);
     },
+    give_permission: (userId, permissionName) => table(T.user_permissions).insert({user_id: userId, permission_name: permissionName}),
+    deny_permission: (userId, permissionName) => table(T.user_permissions).where('user_id', userId).andWhere('permission_name', permissionName).del(),
   },
   role_permissions: {
     name: "role_permissions",
@@ -394,6 +399,8 @@ var T = {
 
       table.primary(["role_id", "permission_name"]);
     },
+    give_permission: (roleId, permissionName) => table(T.role_permissions).insert({role_id: roleId, permission_name: permissionName}),
+    deny_permission: (roleId, permissionName) => table(T.role_permissions).where('role_id', roleId).andWhere('permission_name', permissionName).del(),
   },
   project_members: {
     name: "project_members",
@@ -415,6 +422,8 @@ var T = {
 
       table.primary(["user_id", "project_id"]);
     },
+    make_member: (userId, projectId) => table(T.project_members).insert({user_id: userId, project_id: projectId}),
+    deny_member: (userId, projectId) => table(T.project_members).where('user_id', userId).andWhere('project_id', projectId).del(),
     check_member: (userId, projectId) => table(T.project_members).first()
                                                                  .where("user_id", userId)
                                                                  .andWhere("project_id", projectId)
@@ -447,6 +456,11 @@ var T = {
 
       table.primary(["user_id", "project_id", "role_id"]);
     },
+    give_role: (userId, projectId, roleId) => table(T.project_member_roles).insert({user_id: userId, project_id: projectId, role_id: roleId}),
+    deny_role: (userId, projectId, roleId) => table(T.project_member_roles).where('user_id', userId)
+                                                                           .andWhere('project_id', projectId)
+                                                                           .andWhere('role_id', roleId)
+                                                                           .del(),
   },
   issue_changes: {
     name: "issue_changes",
@@ -549,12 +563,161 @@ var T = {
   },
   dropAllTables: function(knex) {
     var query = Promise.resolve(true);
+    query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 0"));
     for (var key in T) {
       if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
         let tbl = T[key];
         query = query.then(data => knex.schema.dropTableIfExists(tbl.name));
       }
     }
+    query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 1"));
+    return query;
+  },
+  fillWithTestData: function(knex) {
+    var query = Promise.resolve(true);
+
+    var users = [
+      {email: "developer@gmail.com", password: "1", nickname: "vasya_pupkin", real_name: "Vasya Pupkin"},
+      {email: "developer2@gmail.com", password: "1", nickname: "ronnie_c", real_name: "Ronnie Coleman"},
+      {email: "developer3@gmail.com", password: "1", nickname: "andy_james", real_name: "Andy James"},
+      {email: "developer4@gmail.com", password: "1", nickname: "hetfield", real_name: "James Hetfield"},
+      {email: "developer5@gmail.com", password: "1", nickname: "hammett", real_name: "Kirk Hammett"},
+      {email: "manager@gmail.com", password: "1", nickname: "lars_ulrich", real_name: "Lars Ulrich"},
+      {email: "manager2@gmail.com", password: "1", nickname: "dave_mustaine", real_name: "Dave Mustaine"},
+      {email: "manager3@gmail.com", password: "1", nickname: "corey_taylor,", real_name: "Corey Taylor"},
+      {email: "manager4@gmail.com", password: "1", nickname: "danny_worsnop", real_name: "Danny Worsnop"},
+      {email: "manager5@gmail.com", password: "1", nickname: "denis_stoff", real_name: "Denis Stoff"},
+      {email: "tester@gmail.com", password: "1", nickname: "ben_bruce", real_name: "Ben Bruce"},
+      {email: "tester2@gmail.com", password: "1", nickname: "kellin_quinn", real_name: "Kellin Quinn"},
+      {email: "tester3@gmail.com", password: "1", nickname: "johnny_cash,", real_name: "Johnny Cash"},
+      {email: "tester4@gmail.com", password: "1", nickname: "vic_fuentes", real_name: "Vic Fuentes"},
+      {email: "tester5@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"}
+    ];
+
+    var projects = [
+      {
+        name: "DNO Project",
+        short_description: "An application for doing everything possible on Earth.",
+        full_description: "A project where everything that is possible will be implemented for a budget of $50."
+      },
+      {
+        name: "Metallica",
+        short_description: "Metallica is an American heavy metal band formed in Los Angeles, California.",
+        full_description: "Metallica was formed in 1981 when vocalist/guitarist James Hetfield responded to an advertisement posted by drummer Lars Ulrich in a local newspaper. The band's current line-up comprises founding members Hetfield and Ulrich, longtime lead guitarist Kirk Hammett and bassist Robert Trujillo. Guitarist Dave Mustaine and bassists Ron McGovney, Cliff Burton and Jason Newsted are former members of the band."
+      },
+      {
+        name: "Escape the Fate",
+        short_description: "Escape the Fate is an American rock band from Las Vegas, Nevada, formed in 2005 and originally from Pahrump, Nevada.",
+        full_description: "They are signed to Eleven Seven Music. The group consists of Robert Ortiz (drummer), Craig Mabbitt (lead vocalist), TJ Bell (rhythm guitarist and vocalist), Kevin Gruft (lead guitarist) and touring musician Max Georgiev (bassist). As of 2013, Ortiz is the last founding member in the current line up of the group."
+      },
+      {
+        name: "Megadeth",
+        short_description: "Megadeth is an American thrash metal band from Los Angeles, California.",
+        full_description: "The group was formed in 1983 by guitarist Dave Mustaine and bassist David Ellefson, shortly after Mustaine's dismissal from Metallica. A pioneer of the American thrash metal scene, the band is credited as one of the genre's \"big four\" with Anthrax, Metallica and Slayer, responsible for thrash metal's development and popularization. Megadeth plays in a technical style, featuring fast rhythm sections and complex arrangements. Themes of death, war, politics and religion are prominent in the group's lyrics."
+      },
+      {
+        name: "As I Lay Dying",
+        short_description: "As I Lay Dying is an American metalcore band from San Diego, California.",
+        full_description: "Founded in 2000 by vocalist Tim Lambesis, the establishment of the band's first full lineup, which included drummer Jordan Mancino, occurred in 2001. As I Lay Dying has released six albums, one split album, and two compilation albums."
+      },
+      {
+        name: "Of Mice & Men",
+        short_description: "Of Mice & Men is an American metalcore band from Orange County, California.",
+        full_description: "The band's lineup currently consists of vocalist Austin Carlile, lead guitarist Phil Manansala, rhythm guitarist and backing vocalist Alan Ashby, bassist and vocalist Aaron Pauley and drummer Valentino Arteaga. The group was founded by Austin Carlile and Jaxin Hall in mid-2009 after Carlile's departure from Attack Attack!. Since 2009 the band has released 3 studio albums. The name of the band is derived from John Steinbeck's novel of the same title."
+      }
+    ];
+
+    var roles = [{name: "Admin", description: "Admin"}];
+    var projectRoles = [
+      {name: "Developer", description: "Developer"},
+      {name: "Manager", description: "Manager"},
+      {name: "Tester", description: "Tester"}
+    ];
+    for (var i in projects) {
+      roles.push.apply(projectRoles);
+    }
+
+    var projectMembers = [
+      // Developers
+      {user_id: 1, project_id: 1, join_date: new Date()},
+      {user_id: 2, project_id: 2, join_date: new Date()},
+      {user_id: 3, project_id: 2, join_date: new Date()},
+      {user_id: 3, project_id: 3, join_date: new Date()},
+      {user_id: 4, project_id: 3, join_date: new Date()},
+      {user_id: 4, project_id: 4, join_date: new Date()},
+      {user_id: 4, project_id: 5, join_date: new Date()},
+      {user_id: 5, project_id: 5, join_date: new Date()},
+      {user_id: 5, project_id: 6, join_date: new Date()},
+
+      // Managers
+      {user_id: 6, project_id: 1, join_date: new Date()},
+      {user_id: 7, project_id: 2, join_date: new Date()},
+      {user_id: 8, project_id: 2, join_date: new Date()},
+      {user_id: 8, project_id: 3, join_date: new Date()},
+      {user_id: 9, project_id: 3, join_date: new Date()},
+      {user_id: 9, project_id: 4, join_date: new Date()},
+      {user_id: 9, project_id: 5, join_date: new Date()},
+      {user_id: 10, project_id: 5, join_date: new Date()},
+      {user_id: 10, project_id: 6, join_date: new Date()},
+
+      // Testers
+      {user_id: 11, project_id: 1, join_date: new Date()},
+      {user_id: 12, project_id: 2, join_date: new Date()},
+      {user_id: 13, project_id: 2, join_date: new Date()},
+      {user_id: 13, project_id: 3, join_date: new Date()},
+      {user_id: 14, project_id: 3, join_date: new Date()},
+      {user_id: 14, project_id: 4, join_date: new Date()},
+      {user_id: 14, project_id: 5, join_date: new Date()},
+      {user_id: 15, project_id: 5, join_date: new Date()},
+      {user_id: 15, project_id: 6, join_date: new Date()},
+    ];
+
+    var projectMemberRoles = [
+      // Developers
+      {user_id: 1, project_id: 1, role_id: 2},
+      {user_id: 2, project_id: 2, role_id: 2+3},
+      {user_id: 3, project_id: 2, role_id: 2+3},
+      {user_id: 3, project_id: 3, role_id: 2+6},
+      {user_id: 4, project_id: 3, role_id: 2+6},
+      {user_id: 4, project_id: 4, role_id: 2+9},
+      {user_id: 4, project_id: 5, role_id: 2+12},
+      {user_id: 5, project_id: 5, role_id: 2+12},
+      {user_id: 5, project_id: 6, role_id: 2+15},
+
+      // Managers
+      {user_id: 6, project_id: 1, role_id:  3},
+      {user_id: 7, project_id: 2, role_id:  3+3},
+      {user_id: 8, project_id: 2, role_id:  3+3},
+      {user_id: 8, project_id: 3, role_id:  3+6},
+      {user_id: 9, project_id: 3, role_id:  3+6},
+      {user_id: 9, project_id: 4, role_id:  3+9},
+      {user_id: 9, project_id: 5, role_id:  3+12},
+      {user_id: 10, project_id: 5, role_id: 3+12},
+      {user_id: 10, project_id: 6, role_id: 3+15},
+
+      // Testers
+      {user_id: 11, project_id: 1, role_id: 4},
+      {user_id: 12, project_id: 2, role_id: 4+3},
+      {user_id: 13, project_id: 2, role_id: 4+3},
+      {user_id: 13, project_id: 3, role_id: 4+6},
+      {user_id: 14, project_id: 3, role_id: 4+6},
+      {user_id: 14, project_id: 4, role_id: 4+9},
+      {user_id: 14, project_id: 5, role_id: 4+12},
+      {user_id: 15, project_id: 5, role_id: 4+12},
+      {user_id: 15, project_id: 6, role_id: 4+15},
+    ];
+
+    // Create users
+    query = query.then(data => knex.batchInsert(T.users.name, users));
+    // Create projects
+    query = query.then(data => knex.batchInsert(T.projects.name, projects));
+    // Create roles
+    query = query.then(data => knex.batchInsert(T.roles.name, roles));
+    // Assign project members
+    query = query.then(data => knex.batchInsert(T.project_members.name, projectMembers));
+    // Assign project member roles
+    query = query.then(data => knex.batchInsert(T.project_member_roles.name, projectMemberRoles));
+
     return query;
   }
 }

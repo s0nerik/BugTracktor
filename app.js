@@ -102,10 +102,13 @@ if (process.env.DEV) {
   });
 }
 
+var prepareQuery = Promise.resolve(true);
 if (process.env.DROP_TABLES) {
-  tables.dropAllTables(knex).then(data => tables.createAllTables(knex));
+  prepareQuery = prepareQuery.then(data => tables.dropAllTables(knex))
+                             .then(data => tables.createAllTables(knex))
+                             .then(data => tables.fillWithTestData())
 } else {
-  tables.createAllTables(knex)
+  prepareQuery = prepareQuery.then(data => tables.createAllTables(knex));
 }
 
 Date.prototype.addMinutes = function(minutes) {
