@@ -362,6 +362,21 @@ var T = {
         })
         .then(data => without_nulls(to_array_of_values(data))),
   },
+  user_permissions: {
+    name: "user_permissions",
+    fields: ["user_id", "permission_name"],
+    init: table => {
+     table.integer("user_id")
+           .unsigned()
+           .notNullable()
+          .references("id")
+          .inTable(T.users.name);
+     table.string("permission_name")
+          .references("name")
+          .inTable(T.permissions.name);
+     table.primary(["user_id", "permission_name"]);
+    },
+  },
   role_permissions: {
     name: "role_permissions",
     fields: ["role_id", "permission_name"],
