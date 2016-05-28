@@ -352,16 +352,16 @@ var T = {
     get_by_token: (token, projectId) =>
       table(T.role_permissions)
         .distinct("permission_name")
-        .innerJoin(T.tokens.name, T.tokens.name+".token", token)
+        .innerJoin(T.tokens.name, T.tokens.name+".token", knex.raw('?', [token]))
         .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", T.tokens.name+".user_id")
-                                                                  .andOn(T.project_member_roles.name+".project_id", projectId)})
+                                                                  .andOn(T.project_member_roles.name+".project_id", knex.raw('?', [projectId]))})
         .union(function() {
           this.distinct("permission_name")
               .from(T.user_permissions.name)
               .where("user_id", function() {
                 this.select("user_id")
                     .from(T.tokens.name)
-                    .where("token", token)
+                    .where("token", knex.raw('?', [token]))
               })
         })
         .then(data => without_nulls(to_array_of_values(data))),
@@ -639,20 +639,20 @@ var T = {
     }
 
     var rolePermissions = [];
-    var givePermissions = (roleId, permissions) => {
+    var giveRolePermissions = (roleId, permissions) => {
       for (var i in permissions) {
         rolePermissions.push({role_id: roleId, permission_name: permissions[i]});
       }
     }
     // Give admin all permissions
     var allPermissions = permissions.asArray().map(it => it.name);
-    givePermissions(1, allPermissions);
+    giveRolePermissions(1, allPermissions);
     // Give permissions to developers
-    [2, 2+3, 2+6, 2+9, 2+12, 2+15].forEach(it => givePermissions(it, ["get_project", "list_issues", "get_issue", "close_issue"]));
+    [2, 2+3, 2+6, 2+9, 2+12, 2+15].forEach(it => giveRolePermissions(it, ["list_projects", "get_project", "list_issues", "get_issue", "close_issue"]));
     // Give permissions to managers
-    [3, 3+3, 3+6, 3+9, 3+12, 3+15].forEach(it => givePermissions(it, allPermissions));
+    [3, 3+3, 3+6, 3+9, 3+12, 3+15].forEach(it => giveRolePermissions(it, allPermissions));
     // Give permissions to testers
-    [4, 4+3, 4+6, 4+9, 4+12, 4+15].forEach(it => givePermissions(it, allPermissions));
+    [4, 4+3, 4+6, 4+9, 4+12, 4+15].forEach(it => giveRolePermissions(it, allPermissions));
 
     var projectRoles = [
       {name: "Developer", description: "Developer"},
