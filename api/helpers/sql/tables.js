@@ -862,11 +862,12 @@ var T = {
       Array.prototype.push.apply(issueTypes, commonIssueTypes);
     }
 
+    var testIssuesCnt = 10;
     var issues = []
-    for (i = 1; i <= projects.length * 10; i++) {
+    for (i = 1; i <= projects.length * testIssuesCnt; i++) {
       issues.push(
         {
-          type_id: (i * commonIssueTypes.length / 10) % commonIssueTypes.length + 1,
+          type_id: (i * commonIssueTypes.length / testIssuesCnt) % commonIssueTypes.length + 1,
           short_description: "Test issue (id: ${i})",
           full_description: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.",
           creation_date: randomDate(new Date(2012, 0, 1), new Date())
@@ -875,13 +876,20 @@ var T = {
     }
 
     var issueAssignments = []
-    for (i = 1; i <= 60; i++) {
+    for (i = 1; i <= projects.length * testIssuesCnt; i++) {
       issueAssignments.push(
         {
           issue_id: i,
           user_id: i % 5 + 1
         }
       );
+    }
+
+    var projectIssues = []
+    for (i = 0; i < projects.length; i++) {
+      for (j = 0; j < testIssuesCnt; j++) {
+        projectIssues.push({ project_id: i+1, issue_id: i * testIssuesCnt + j + 1, issue_index: j + 1 });
+      }
     }
 
     // Create users
@@ -904,8 +912,10 @@ var T = {
     query = query.then(data => knex.batchInsert(T.issue_types.name, issueTypes));
     // Create issues
     query = query.then(data => knex.batchInsert(T.issues.name, issues));
-    // Assign issues
+    // Assign issues to their assignees
     query = query.then(data => knex.batchInsert(T.issue_assignments.name, issueAssignments));
+    // Assign issues to projects
+    query = query.then(data => knex.batchInsert(T.project_issues.name, projectIssues));
 
     return query;
   }
