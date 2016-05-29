@@ -172,14 +172,26 @@ var T = {
     get: id => get_with_id(T.projects, id),
     get_user_projects: user => table(T.projects).select()
                                                 .whereIn("id", function() {
-                                                  this.select('project_id').from(T.project_members.name)
-                                                                           .where("user_id", user.id);
+                                                  this.select('project_id')
+                                                      .from(T.project_members.name)
+                                                      .where("user_id", user.id)
+                                                      .union(function() {
+                                                        this.select("project_id")
+                                                            .from(T.project_creators.name)
+                                                            .where("user_id", user.id)
+                                                      })
                                                 })
                                                 .then(data => without_nulls(data)),
     get_user_project_by_id: (user, projectId) => table(T.projects).first()
                                                                   .whereIn("id", function() {
-                                                                    this.select('project_id').from(T.project_members.name)
-                                                                                             .where("user_id", user.id);
+                                                                    this.select('project_id')
+                                                                        .from(T.project_members.name)
+                                                                        .where("user_id", user.id)
+                                                                        .union(function() {
+                                                                          this.select("project_id")
+                                                                              .from(T.project_creators.name)
+                                                                              .where("user_id", user.id)
+                                                                        })
                                                                   })
                                                                   .andWhere("id", projectId)
                                                                   .then(data => without_nulls(data)),
