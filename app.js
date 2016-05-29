@@ -17,8 +17,7 @@ app.use(expressWinston.logger({
       json: true,
       colorize: true
     })
-  ],
-  msg: "HTTP {{res.statusCode}} {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
+  ]
 }));
 
 var containsAll = function (original, array) {
