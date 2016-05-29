@@ -50,6 +50,7 @@ function getProject(req, res) {
   });
 
   query = query.then(project => {
+              console.log("project: "+project);
               if (project) res.json(project);
               else res.json(404, {message: "Not found"});
             });
