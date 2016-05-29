@@ -8,9 +8,12 @@ var methodPermissions = require('./api/helpers/method_permissions');
 var Promise = require("bluebird");
 var winston = require('winston');
 var expressWinston = require('express-winston');
+var _ = require('lodash');
 
 module.exports = app; // for testing
 
+expressWinston.requestWhitelist.push('body');
+expressWinston.responseWhitelist.push('body');
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.Console({
@@ -18,8 +21,8 @@ app.use(expressWinston.logger({
       colorize: true
     })
   ],
-  requestFilter: function (req, propName) { return req[propName]; },
-  responseFilter: function (res, propName) { return res[propName]; }
+  requestFilter: function (req, propName) { return _.get(req, propName); },
+  responseFilter: function (res, propName) { return _.get(res, propName); }
 }));
 
 var containsAll = function (original, array) {
