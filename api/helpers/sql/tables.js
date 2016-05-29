@@ -221,6 +221,13 @@ var T = {
     is_creator: (userId, projectId) => table(T.project_creators).where("user_id", userId)
                                                                 .andWhere("project_id", projectId)
                                                                 .then(data => !(!data || data.length === 0)),
+    get_creator_by_project_id: projectId => table(T.users).first()
+                                                          .where("id", function () {
+                                                            this.first("user_id")
+                                                                .from(T.project_creators.name)
+                                                                .where("project_id", projectId)
+                                                          })
+                                                          .then(data => without_nulls(without_fields(data, ["password"]))),
   },
   issue_types: {
     name: "issue_types",
