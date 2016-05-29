@@ -6,8 +6,20 @@ var cors = require('cors');
 var tables = require('./api/helpers/sql/tables');
 var methodPermissions = require('./api/helpers/method_permissions');
 var Promise = require("bluebird");
+var winston = require('winston');
+var expressWinston = require('express-winston');
 
 module.exports = app; // for testing
+
+app.use(expressWinston.logger({
+  transports: [
+    new winston.transports.Console({
+      json: true,
+      colorize: true
+    })
+  ],
+  msg: "HTTP {{res.statusCode}} {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
+}));
 
 var containsAll = function (original, array) {
   return array.every(function(v,i) {
