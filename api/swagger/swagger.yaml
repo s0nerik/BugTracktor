@@ -412,6 +412,8 @@ definitions:
       full_description:
         type: string
         description: Full description of the project.
+      creator:
+        $ref: "#/definitions/User"
       members:
         type: array
         items:

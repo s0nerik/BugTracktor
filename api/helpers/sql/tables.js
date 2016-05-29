@@ -464,6 +464,14 @@ var T = {
                                                                    if (data) return true;
                                                                    else return false;
                                                                  }),
+    get_members_by_project_id: projectId =>
+      table(T.users)
+        .distinct(T.users.fields)
+        .innerJoin(T.project_members.name, function () {
+          this.on(T.project_members.name+".user_id", T.users.name=".id")
+              .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
+        })
+        .then(data => without_nulls(data)),
   },
   project_member_roles: {
     name: "project_member_roles",
@@ -494,6 +502,21 @@ var T = {
                                                                            .andWhere('project_id', projectId)
                                                                            .andWhere('role_id', roleId)
                                                                            .del(),
+    get_all_member_role_ids_for_project: projectId =>
+      table(T.project_member_roles)
+        .distinct(["user_id", "role_id"])
+        .where("project_id", projectId)
+        .then(data => without_nulls(data)),
+    get_all_user_roles_in_project: (projectId, userId) =>
+      table(T.roles)
+        .select()
+        .whereIn("id", function() {
+          this.distinct("role_id")
+              .where("project_id", projectId)
+              .andWhere("user_id", userId)
+              .from(T.project_member_roles.name)
+        })
+        .then(data => without_nulls(data)),
   },
   issue_changes: {
     name: "issue_changes",

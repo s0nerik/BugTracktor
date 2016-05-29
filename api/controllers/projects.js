@@ -3,6 +3,7 @@
 var util = require('util');
 
 var T = require('../helpers/sql/tables');
+var Promise = require("bluebird");
 
 module.exports = {
   listProjects: listProjects,
@@ -17,9 +18,33 @@ function listProjects(req, res) {
 }
 
 function getProject(req, res) {
-  T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
-            .then(info => {
-              if (info) res.json(info);
+  var query = Promise.resolve(true);
+  query = T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
+
+  query = query.then(project => T.project_members.get_members_by_project_id(req.swagger.params.projectId.value)
+                                                 .then(members => { // not a ProjectMember, just a User
+                                                   project["members"] = members;
+                                                   return project;
+                                                 }));
+
+  query = query.then(project => {
+    let users = project["members"];
+    project["members"] = [];
+    var innerQuery = Promise.resolve(project);
+    for (let user in users) {
+      var innerQuery = innerQuery.then(project =>
+        T.project_member_roles.get_all_user_roles_in_project(project.id, members[i].id)
+                              .then(roles => {
+                                project["members"].push({user: user, roles: roles});
+                                return project;
+                              })
+      );
+    }
+    return innerQuery;
+  });
+
+  query = query.then(project => {
+              if (project) res.json(project);
               else res.json(404, {message: "Not found"});
             });
 }
