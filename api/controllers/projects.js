@@ -33,9 +33,9 @@ function getProject(req, res) {
     var innerQuery = Promise.resolve(project);
     for (let user in users) {
       var innerQuery = innerQuery.then(project =>
-        T.project_member_roles.get_all_user_roles_in_project(project.id, members[i].id)
+        T.project_member_roles.get_all_user_roles_in_project(project.id, users[user].id)
                               .then(roles => {
-                                project["members"].push({user: user, roles: roles});
+                                project["members"].push({user: users[user], roles: roles});
                                 return project;
                               })
       );
