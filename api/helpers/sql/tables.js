@@ -887,7 +887,7 @@ var T = {
 
     var projectIssues = []
     for (i = 0; i < projects.length; i++) {
-      for (j = 0; j < testIssuesCnt; j++) {
+      for (var j = 0; j < testIssuesCnt; j++) {
         projectIssues.push({ project_id: i+1, issue_id: i * testIssuesCnt + j + 1, issue_index: j + 1 });
       }
     }
