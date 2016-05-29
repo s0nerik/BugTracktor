@@ -21,6 +21,12 @@ function getProject(req, res) {
   var query = Promise.resolve(true);
   query = T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
 
+  query = query.then(project => T.project_issues.get(req.swagger.params.projectId.value)
+                                                  .then(issues => {
+                                                    project.issues = issues;
+                                                    return project;
+                                                  }));
+
   query = query.then(project => T.project_creators.get_creator_by_project_id(req.swagger.params.projectId.value)
                                                   .then(creator => {
                                                     project.creator = creator;
