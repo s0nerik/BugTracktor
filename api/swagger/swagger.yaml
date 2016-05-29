@@ -389,6 +389,8 @@ definitions:
       issue_index:
         type: integer
         description: Index of the issue inside the project.
+      author:
+        $ref: "#/definitions/User"
       project:
         $ref: "#/definitions/Project"
       type:

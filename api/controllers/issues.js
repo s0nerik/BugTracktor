@@ -35,6 +35,7 @@ function getIssue(req, res) {
 }
 
 function createIssue(req, res) {
+  req.swagger.params.issue.value.author = req.user;
   T.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
                   .then(info => res.json(info));
 }
