@@ -84,6 +84,13 @@ parameters:
     required: false
     type: integer
     format: int32
+  projectIdQueryParam:
+    in: query
+    name: projectId
+    description: ID of the project to operate with.
+    required: false
+    type: integer
+    format: int64
 
 
 ## Requests
@@ -130,6 +137,23 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Token"
+  /permissions:
+    x-swagger-router-controller: permissions
+    get:
+      operationId: getPermissions
+      description: |
+        Returns a list of user's permissions in the given project (if
+        projectId parameter specified) or global permissions (if projectId
+        isn't specified)
+      parameters:
+        - $ref: "#/parameters/projectIdQueryParam"
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Permission"
   /projects:
     x-swagger-router-controller: projects
     get:

@@ -365,6 +365,25 @@ var T = {
               })
         })
         .then(data => without_nulls(to_array_of_values(data))),
+    get_by_user_id_and_project: (userId, projectId) => {
+      if (projectId) {
+        return table(T.role_permissions)
+          .distinct("permission_name")
+          .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", knex.raw('?', [userId]))
+                                                                   .andOn(T.project_member_roles.name+".project_id", knex.raw('?', [projectId]))})
+          .union(function() {
+            this.distinct("permission_name")
+                .from(T.user_permissions.name)
+                .where("user_id", userId)
+          })
+          .then(data => without_nulls(to_array_of_values(data)))
+      } else {
+        return table(T.user_permissions)
+          .distinct("permission_name")
+          .where("user_id", userId)
+          .then(data => without_nulls(to_array_of_values(data)))
+      }
+    },
   },
   user_permissions: {
     name: "user_permissions",
