@@ -835,6 +835,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.project_member_roles.name, projectMemberRoles));
     // Give users their global permissions
     query = query.then(data => knex.batchInsert(T.user_permissions.name, userPermissions));
+    // Assign project creators
+    query = query.then(data => knex.batchInsert(T.project_creators.name, projectCreators));
 
     return query;
   }
