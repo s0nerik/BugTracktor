@@ -475,7 +475,7 @@ var T = {
       table(T.users)
         .distinct(T.users.fields)
         .innerJoin(T.project_members.name, function () {
-          this.on(T.project_members.name+".user_id", T.users.name=".id")
+          this.on(T.project_members.name+".user_id", T.users.name+".id")
               .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
         })
         .then(data => without_nulls(data)),
