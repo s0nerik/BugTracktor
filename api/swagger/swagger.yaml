@@ -440,6 +440,9 @@ definitions:
       real_name:
         type: string
         description: User's real name.
+      avatar_url:
+        type: string
+        description: User's avatar URL.
     required: ["email", "password"]
   IssueType:
     type: object

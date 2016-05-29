@@ -144,13 +144,14 @@ function table(table) {
 var T = {
   users: {
     name: "users",
-    fields: ["id", "email", "password", "nickname", "real_name"],
+    fields: ["id", "email", "password", "nickname", "real_name", "avatar_url"],
     init: table => {
       table.increments("id");
       table.string("email");
       table.string("password");
       table.string("nickname");
       table.string("real_name");
+      table.string("avatar_url");
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
@@ -612,22 +613,22 @@ var T = {
     var query = Promise.resolve(true);
 
     var users = [
-      {email: "developer@gmail.com", password: "1", nickname: "vasya_pupkin", real_name: "Vasya Pupkin"},
-      {email: "developer2@gmail.com", password: "1", nickname: "ronnie_c", real_name: "Ronnie Coleman"},
-      {email: "developer3@gmail.com", password: "1", nickname: "andy_james", real_name: "Andy James"},
-      {email: "developer4@gmail.com", password: "1", nickname: "hetfield", real_name: "James Hetfield"},
-      {email: "developer5@gmail.com", password: "1", nickname: "hammett", real_name: "Kirk Hammett"},
-      {email: "manager@gmail.com", password: "1", nickname: "lars_ulrich", real_name: "Lars Ulrich"},
-      {email: "manager2@gmail.com", password: "1", nickname: "dave_mustaine", real_name: "Dave Mustaine"},
-      {email: "manager3@gmail.com", password: "1", nickname: "corey_taylor,", real_name: "Corey Taylor"},
-      {email: "manager4@gmail.com", password: "1", nickname: "danny_worsnop", real_name: "Danny Worsnop"},
-      {email: "manager5@gmail.com", password: "1", nickname: "denis_stoff", real_name: "Denis Stoff"},
-      {email: "tester@gmail.com", password: "1", nickname: "ben_bruce", real_name: "Ben Bruce"},
-      {email: "tester2@gmail.com", password: "1", nickname: "kellin_quinn", real_name: "Kellin Quinn"},
-      {email: "tester3@gmail.com", password: "1", nickname: "johnny_cash,", real_name: "Johnny Cash"},
-      {email: "tester4@gmail.com", password: "1", nickname: "vic_fuentes", real_name: "Vic Fuentes"},
-      {email: "tester5@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"},
-      {email: "admin@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"}
+      {email: "developer@gmail.com",    password: "1", nickname: "vasya_pupkin",  real_name: "Vasya Pupkin",    avatar_url: "http://api.adorable.io/avatar/256/1"   },
+      {email: "developer2@gmail.com",   password: "1", nickname: "ronnie_c",      real_name: "Ronnie Coleman",  avatar_url: "http://api.adorable.io/avatar/256/2"   },
+      {email: "developer3@gmail.com",   password: "1", nickname: "andy_james",    real_name: "Andy James",      avatar_url: "http://api.adorable.io/avatar/256/3"   },
+      {email: "developer4@gmail.com",   password: "1", nickname: "hetfield",      real_name: "James Hetfield",  avatar_url: "http://api.adorable.io/avatar/256/4"   },
+      {email: "developer5@gmail.com",   password: "1", nickname: "hammett",       real_name: "Kirk Hammett",    avatar_url: "http://api.adorable.io/avatar/256/5"   },
+      {email: "manager@gmail.com",      password: "1", nickname: "lars_ulrich",   real_name: "Lars Ulrich",     avatar_url: "http://api.adorable.io/avatar/256/6"   },
+      {email: "manager2@gmail.com",     password: "1", nickname: "dave_mustaine", real_name: "Dave Mustaine",   avatar_url: "http://api.adorable.io/avatar/256/7"   },
+      {email: "manager3@gmail.com",     password: "1", nickname: "corey_taylor,", real_name: "Corey Taylor",    avatar_url: "http://api.adorable.io/avatar/256/8"   },
+      {email: "manager4@gmail.com",     password: "1", nickname: "danny_worsnop", real_name: "Danny Worsnop",   avatar_url: "http://api.adorable.io/avatar/256/9"   },
+      {email: "manager5@gmail.com",     password: "1", nickname: "denis_stoff",   real_name: "Denis Stoff",     avatar_url: "http://api.adorable.io/avatar/256/10"  },
+      {email: "tester@gmail.com",       password: "1", nickname: "ben_bruce",     real_name: "Ben Bruce",       avatar_url: "http://api.adorable.io/avatar/256/11"  },
+      {email: "tester2@gmail.com",      password: "1", nickname: "kellin_quinn",  real_name: "Kellin Quinn",    avatar_url: "http://api.adorable.io/avatar/256/12"  },
+      {email: "tester3@gmail.com",      password: "1", nickname: "johnny_cash,",  real_name: "Johnny Cash",     avatar_url: "http://api.adorable.io/avatar/256/13"  },
+      {email: "tester4@gmail.com",      password: "1", nickname: "vic_fuentes",   real_name: "Vic Fuentes",     avatar_url: "http://api.adorable.io/avatar/256/14"  },
+      {email: "tester5@gmail.com",      password: "1", nickname: "ronnie_radke",  real_name: "Ronnie Radke",    avatar_url: "http://api.adorable.io/avatar/256/15"  },
+      {email: "admin@gmail.com",        password: "1", nickname: "oxxxymiron",    real_name: "Miron Fedorov",   avatar_url: "http://api.adorable.io/avatar/256/16"  }
     ];
 
     var projects = [
