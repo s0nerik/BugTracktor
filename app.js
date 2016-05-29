@@ -11,15 +11,15 @@ var expressWinston = require('express-winston');
 
 module.exports = app; // for testing
 
-expressWinston.requestWhitelist.push('body');
-expressWinston.responseWhitelist.push('body');
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.Console({
       json: true,
       colorize: true
     })
-  ]
+  ],
+  requestFilter: function (req, propName) { return req[propName]; },
+  responseFilter: function (res, propName) { return res[propName]; }
 }));
 
 var containsAll = function (original, array) {
