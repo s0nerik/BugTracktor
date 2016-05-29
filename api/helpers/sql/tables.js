@@ -614,7 +614,8 @@ var T = {
       {email: "tester2@gmail.com", password: "1", nickname: "kellin_quinn", real_name: "Kellin Quinn"},
       {email: "tester3@gmail.com", password: "1", nickname: "johnny_cash,", real_name: "Johnny Cash"},
       {email: "tester4@gmail.com", password: "1", nickname: "vic_fuentes", real_name: "Vic Fuentes"},
-      {email: "tester5@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"}
+      {email: "tester5@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"},
+      {email: "admin@gmail.com", password: "1", nickname: "ronnie_radke", real_name: "Ronnie Radke"}
     ];
 
     var projects = [
@@ -675,6 +676,19 @@ var T = {
     [3, 3+3, 3+6, 3+9, 3+12, 3+15].forEach(it => giveRolePermissions(it, allPermissions));
     // Give permissions to testers
     [4, 4+3, 4+6, 4+9, 4+12, 4+15].forEach(it => giveRolePermissions(it, allPermissions));
+
+    var userPermissions = [];
+    var giveUserPermissions = (userId, permissions) => {
+      for (var i in permissions) {
+        userPermissions.push({user_id: userId, permission_name: permissions[i]});
+      }
+    }
+    // Give managers all permissions
+    for (i = 6; i < 11; i++) {
+      giveUserPermissions(i, allPermissions);
+    }
+    // Give admin user all permissions
+    giveUserPermissions(16, allPermissions);
 
     var projectRoles = [
       {name: "Developer", description: "Developer"},
@@ -767,6 +781,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.project_members.name, projectMembers));
     // Assign project member roles
     query = query.then(data => knex.batchInsert(T.project_member_roles.name, projectMemberRoles));
+    // Give users their global permissions
+    query = query.then(data => knex.batchInsert(T.user_permissions.name, userPermissions));
 
     return query;
   }
