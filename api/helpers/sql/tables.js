@@ -289,6 +289,27 @@ var T = {
     get: id => get_with_id(T.issues, id),
     remove: id => remove_with_id(T.issues, id),
   },
+  issue_assignments: {
+    name: "issue_assignments",
+    fields: ["issue_id", "user_id"],
+    init: table => {
+      table.integer("issue_id")
+            .unsigned()
+            .notNullable()
+           .references("id")
+           .inTable(T.issues.name);
+
+      table.integer("user_id")
+            .unsigned()
+            .notNullable()
+           .references("id")
+           .inTable(T.users.name);
+
+      table.primary(["issue_id", "user_id"]);
+    },
+    assign: (issueId, userId) => table(T.issue_assignments).insert({ issue_id: issueId, user_id: userId }),
+    remove: (issueId, userId) => table(T.issue_assignments).where({ issue_id: issueId, user_id: userId }).del(),
+  },
   project_issues: {
     name: "project_issues",
     fields: ["project_id", "issue_id", "issue_index"],
@@ -640,6 +661,10 @@ var T = {
     return query;
   },
   fillWithTestData: function(knex) {
+    var randomDate = function(start, end) {
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    }
+
     var query = Promise.resolve(true);
 
     var users = [
@@ -658,7 +683,12 @@ var T = {
       {email: "tester3@gmail.com",      password: "1", nickname: "johnny_cash,",  real_name: "Johnny Cash",     avatar_url: "http://api.adorable.io/avatar/256/13"  },
       {email: "tester4@gmail.com",      password: "1", nickname: "vic_fuentes",   real_name: "Vic Fuentes",     avatar_url: "http://api.adorable.io/avatar/256/14"  },
       {email: "tester5@gmail.com",      password: "1", nickname: "ronnie_radke",  real_name: "Ronnie Radke",    avatar_url: "http://api.adorable.io/avatar/256/15"  },
-      {email: "admin@gmail.com",        password: "1", nickname: "oxxxymiron",    real_name: "Miron Fedorov",   avatar_url: "http://api.adorable.io/avatar/256/16"  }
+      {email: "admin@gmail.com",        password: "1", nickname: "oxxxymiron",    real_name: "Miron Fedorov",   avatar_url: "http://api.adorable.io/avatar/256/16"  },
+      {email: "user@gmail.com",         password: "1", nickname: "jesse_leach",   real_name: "Jesse Leach",     avatar_url: "http://api.adorable.io/avatar/256/17"  },
+      {email: "user2@gmail.com",        password: "1", nickname: "adam_d",        real_name: "Adam Dutkiewicz", avatar_url: "http://api.adorable.io/avatar/256/18"  },
+      {email: "user3@gmail.com",        password: "1", nickname: "justin_foley",  real_name: "Justin Foley",    avatar_url: "http://api.adorable.io/avatar/256/19"  },
+      {email: "user4@gmail.com",        password: "1", nickname: "howard_jones",  real_name: "Howard Jones",    avatar_url: "http://api.adorable.io/avatar/256/20"  },
+      {email: "user5@gmail.com",        password: "1", nickname: "joel_s",        real_name: "Joel Stroetzel",  avatar_url: "http://api.adorable.io/avatar/256/21"  }
     ];
 
     var projects = [
@@ -744,37 +774,37 @@ var T = {
 
     var projectMembers = [
       // Developers
-      {user_id: 1, project_id: 1, join_date: new Date()},
-      {user_id: 2, project_id: 2, join_date: new Date()},
-      {user_id: 3, project_id: 2, join_date: new Date()},
-      {user_id: 3, project_id: 3, join_date: new Date()},
-      {user_id: 4, project_id: 3, join_date: new Date()},
-      {user_id: 4, project_id: 4, join_date: new Date()},
-      {user_id: 4, project_id: 5, join_date: new Date()},
-      {user_id: 5, project_id: 5, join_date: new Date()},
-      {user_id: 5, project_id: 6, join_date: new Date()},
+      { user_id: 1, project_id: 1, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 2, project_id: 2, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 3, project_id: 2, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 3, project_id: 3, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 4, project_id: 3, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 4, project_id: 4, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 4, project_id: 5, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 5, project_id: 5, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 5, project_id: 6, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
 
       // Managers
-      {user_id: 6, project_id: 1, join_date: new Date()},
-      {user_id: 7, project_id: 2, join_date: new Date()},
-      {user_id: 8, project_id: 2, join_date: new Date()},
-      {user_id: 8, project_id: 3, join_date: new Date()},
-      {user_id: 9, project_id: 3, join_date: new Date()},
-      {user_id: 9, project_id: 4, join_date: new Date()},
-      {user_id: 9, project_id: 5, join_date: new Date()},
-      {user_id: 10, project_id: 5, join_date: new Date()},
-      {user_id: 10, project_id: 6, join_date: new Date()},
+      { user_id: 6, project_id: 1, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 7, project_id: 2, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 8, project_id: 2, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 8, project_id: 3, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 9, project_id: 3, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 9, project_id: 4, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 9, project_id: 5, join_date:   randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 10, project_id: 5, join_date:  randomDate(new Date(2012, 0, 1), new Date())},
+      { user_id: 10, project_id: 6, join_date:  randomDate(new Date(2012, 0, 1), new Date())},
 
       // Testers
-      {user_id: 11, project_id: 1, join_date: new Date()},
-      {user_id: 12, project_id: 2, join_date: new Date()},
-      {user_id: 13, project_id: 2, join_date: new Date()},
-      {user_id: 13, project_id: 3, join_date: new Date()},
-      {user_id: 14, project_id: 3, join_date: new Date()},
-      {user_id: 14, project_id: 4, join_date: new Date()},
-      {user_id: 14, project_id: 5, join_date: new Date()},
-      {user_id: 15, project_id: 5, join_date: new Date()},
-      {user_id: 15, project_id: 6, join_date: new Date()},
+      { user_id: 11, project_id: 1, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 12, project_id: 2, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 13, project_id: 2, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 13, project_id: 3, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 14, project_id: 3, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 14, project_id: 4, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 14, project_id: 5, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 15, project_id: 5, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
+      { user_id: 15, project_id: 6, join_date: randomDate(new Date(2012, 0, 1), new Date()) },
     ];
 
     var projectMemberRoles = [
@@ -821,6 +851,39 @@ var T = {
       { user_id: 10,    project_id: 6 },
     ];
 
+    var commonIssueTypes = [
+      { name: "bug", description: "Bug" },
+      { name: "feature_request", description: "Feature request" },
+      { name: "proposal", description: "Proposal" },
+      { name: "question", description: "Question" },
+    ]
+    var issueTypes = []
+    for (var i in projects) {
+      Array.prototype.push.apply(issueTypes, commonIssueTypes);
+    }
+
+    var issues = []
+    for (i = 1; i <= projects.length * 10; i++) {
+      issues.push(
+        {
+          type_id: (i * commonIssueTypes.length / 10) % commonIssueTypes.length + 1,
+          short_description: "Test issue (id: ${i})",
+          full_description: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.",
+          creation_date: randomDate(new Date(2012, 0, 1), new Date())
+        }
+      );
+    }
+
+    var issueAssignments = []
+    for (i = 1; i <= 60; i++) {
+      issueAssignments.push(
+        {
+          issue_id: i,
+          user_id: i % 5 + 1
+        }
+      );
+    }
+
     // Create users
     query = query.then(data => knex.batchInsert(T.users.name, users));
     // Create projects
@@ -837,6 +900,12 @@ var T = {
     query = query.then(data => knex.batchInsert(T.user_permissions.name, userPermissions));
     // Assign project creators
     query = query.then(data => knex.batchInsert(T.project_creators.name, projectCreators));
+    // Create issue types
+    query = query.then(data => knex.batchInsert(T.issue_types.name, issueTypes));
+    // Create issues
+    query = query.then(data => knex.batchInsert(T.issues.name, issues));
+    // Assign issues
+    query = query.then(data => knex.batchInsert(T.issue_assignments.name, issueAssignments));
 
     return query;
   }
