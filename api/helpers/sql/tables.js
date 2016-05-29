@@ -812,6 +812,15 @@ var T = {
       {user_id: 15, project_id: 6, role_id: 4+15},
     ];
 
+    var projectCreators = [
+      { user_id: 6,     project_id: 1 },
+      { user_id: 7,     project_id: 2 },
+      { user_id: 8,     project_id: 3 },
+      { user_id: 9,     project_id: 4 },
+      { user_id: 10,    project_id: 5 },
+      { user_id: 10,    project_id: 6 },
+    ];
+
     // Create users
     query = query.then(data => knex.batchInsert(T.users.name, users));
     // Create projects
