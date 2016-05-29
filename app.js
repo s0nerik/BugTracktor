@@ -11,6 +11,8 @@ var expressWinston = require('express-winston');
 
 module.exports = app; // for testing
 
+expressWinston.requestWhitelist.push('body');
+expressWinston.responseWhitelist.push('body');
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.Console({
