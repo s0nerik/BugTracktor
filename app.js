@@ -69,11 +69,13 @@ var config = {
 SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (err) { throw err; }
 
-  if (process.env.DEV) {
+  // if (process.env.DEV) {
     function updateObject(obj) {
       for (var i in obj) {
         if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
           obj[i] = new Date(obj[i]).toISOString();
+        } else if (i.indexOf("password") > -1) {
+          delete obj[i];
         } else if (obj[i] instanceof Object) {
           updateObject(obj[i]);
         }
@@ -83,7 +85,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
       updateObject(body);
     }
     app.use(mung.json(redact));
-  }
+  // }
 
   // install middleware
   swaggerExpress.register(app);
