@@ -325,6 +325,26 @@ var T = {
     assign: (issueId, userId) => table(T.issue_assignments).insert({ issue_id: issueId, user_id: userId }),
     remove: (issueId, userId) => table(T.issue_assignments).where({ issue_id: issueId, user_id: userId }).del(),
   },
+  issue_attachments: {
+    name: "issue_attachments",
+    fields: ["issue_id", "url"],
+    init: table => {
+      table.integer("issue_id")
+            .unsigned()
+            .notNullable()
+           .references("id")
+           .inTable(T.issues.name);
+
+      table.text("url")
+           .notNullable();
+
+      table.primary(["issue_id", "url"]);
+    },
+    new: (issueId, url) => table(T.issue_attachments).insert({issue_id: issueId, url: url}),
+    get: issueId => table(T.issue_attachments).select("url")
+                                              .where("issue_id", issueId),
+    remove: issueId => table(T.issue_assignments).where("issue_id", issueId).del(),
+  },
   project_issues: {
     name: "project_issues",
     fields: ["project_id", "issue_id", "issue_index"],
@@ -915,6 +935,23 @@ var T = {
       }
     }
 
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    var issueAttachments = []
+    for (i = 1; i <= projects.length * testIssuesCnt; i++) {
+      var rand = getRandomInt(0, 9);
+      for (var j = 0; j < rand; j++) {
+        issueAttachments.push(
+          {
+            issue_id: i,
+            url: "http://lorempixel.com/"+getRandomInt(100, 500)+"/"+getRandomInt(100, 500)
+          }
+        );
+      }
+    }
+
     // Create users
     query = query.then(data => knex.batchInsert(T.users.name, users));
     // Create projects
@@ -939,6 +976,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.issue_assignments.name, issueAssignments));
     // Assign issues to projects
     query = query.then(data => knex.batchInsert(T.project_issues.name, projectIssues));
+    // Assign attachments to the issues
+    query = query.then(data => knex.batchInsert(T.issue_attachments.name, issueAttachments));
 
     return query;
   }

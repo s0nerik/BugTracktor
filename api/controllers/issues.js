@@ -35,6 +35,10 @@ function getIssue(req, res) {
                                        // Add issue assignees to the response.
                                        .then(info => T.issue_assignments.get_assignees_for_issue_id(localIssue.id))
                                        .then(assignees => localIssue.assignees = assignees)
+                                       // Add issue attachments to the response.
+                                       .then(info => T.issue_attachments.get(localIssue.id))
+                                       .then(attachments => localIssue.attachments = attachments)
+                                       // Return the issue
                                        .then(info => res.json(localIssue));
                      } else {
                        res.status(403).json({message: "You must be a project member to view its issues."});
