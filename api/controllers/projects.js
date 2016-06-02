@@ -21,6 +21,7 @@ function getProject(req, res) {
   var query = Promise.resolve(true);
   query = T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
 
+  // Set project issues
   query = query.then(project => T.project_issues.get(req.swagger.params.projectId.value)
                                                   .then(issues => {
                                                     for (var i in issues) {
@@ -36,12 +37,25 @@ function getProject(req, res) {
                                                     return project;
                                                   }));
 
+  // Set issue authors
+  query = query.then(project => {
+    var innerQuery = Promise.resolve(true);
+    for (var i in project.issues) {
+      let issue = project.issues[i];
+      innerQuery = innerQuery.then(data => T.users.get_without_password(issue.author_id))
+                             .then(author => issue.author = author);
+    }
+    return innerQuery.return(project);
+  });
+
+  // Set project creator
   query = query.then(project => T.project_creators.get_creator_by_project_id(req.swagger.params.projectId.value)
                                                   .then(creator => {
                                                     project.creator = creator;
                                                     return project;
                                                   }));
 
+  // Set project members
   query = query.then(project => T.project_members.get_members_by_project_id(req.swagger.params.projectId.value)
                                                  .then(members => { // not a ProjectMember, just a User
                                                    project["members"] = members;
