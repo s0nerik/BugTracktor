@@ -421,7 +421,7 @@ definitions:
         description: Full description of the issue.
       creation_date:
         type: string
-        format: date
+        format: dateTime
         description: Date when issue was created.
   Project:
     type: object
@@ -544,10 +544,10 @@ definitions:
           $ref: '#/definitions/Role'
       join_date:
         type: string
-        format: date
+        format: dateTime
       exit_date:
         type: string
-        format: date
+        format: dateTime
   Success:
     type: object
     properties:

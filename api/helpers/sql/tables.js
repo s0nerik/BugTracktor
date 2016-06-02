@@ -164,8 +164,8 @@ var T = {
     init: table => {
       table.increments("id");
       table.string("name");
-      table.string("short_description");
-      table.string("full_description");
+      table.text("short_description");
+      table.text("full_description");
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
                                 .then(data => T.project_creators.new(userId, data.id).return(data)),
@@ -280,9 +280,9 @@ var T = {
            .references("id")
            .inTable(T.issue_types.name);
 
-      table.date("creation_date");
-      table.string("short_description");
-      table.string("full_description");
+      table.dateTime("creation_date");
+      table.text("short_description");
+      table.text("full_description");
     },
     new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
@@ -483,7 +483,7 @@ var T = {
            .references("id")
            .inTable(T.projects.name);
 
-      table.date("join_date");
+      table.dateTime("join_date");
 
       table.primary(["user_id", "project_id"]);
     },
@@ -564,12 +564,12 @@ var T = {
      table.integer("author_id")
           .unsigned()
           .notNullable()
-          .references("user_id")
-          .inTable(T.project_members.name);
+          .references("id")
+          .inTable(T.users.name);
 
       table.dateTime("date").notNullable();
 
-      table.string("change");
+      table.text("change");
 
       table.primary(["issue_id", "date"]);
     },
@@ -654,14 +654,22 @@ var T = {
   },
   dropAllTables: function(knex) {
     var query = Promise.resolve(true);
-    query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 0"));
+    if (process.env.DEV) {
+      query = query.then(data => knex.schema.raw("PRAGMA foreign_keys = OFF"));
+    } else {
+      query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 0"));
+    }
     for (var key in T) {
       if (T.hasOwnProperty(key) && !(T[key] instanceof Function)) {
         let tbl = T[key];
         query = query.then(data => knex.schema.dropTableIfExists(tbl.name));
       }
     }
-    query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 1"));
+    if (process.env.DEV) {
+      query = query.then(data => knex.schema.raw("PRAGMA foreign_keys = ON"));
+    } else {
+      query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 1"));
+    }
     return query;
   },
   fillWithTestData: function(knex) {
@@ -871,7 +879,7 @@ var T = {
     for (i = 1; i <= projects.length * testIssuesCnt; i++) {
       issues.push(
         {
-          type_id: (i * commonIssueTypes.length / testIssuesCnt) % commonIssueTypes.length + 1,
+          type_id: (i * Math.floor(commonIssueTypes.length / testIssuesCnt)) % commonIssueTypes.length + 1,
           short_description: "Test issue (id: "+i+")",
           full_description: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.",
           creation_date: randomDate(new Date(2012, 0, 1), new Date())

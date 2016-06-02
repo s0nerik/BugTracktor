@@ -11,6 +11,7 @@
     "alasql": "^0.2.6",
     "cors": "^2.7.1",
     "express": "^4.12.3",
+    "express-mung": "^0.4.2",
     "express-winston": "^1.4.0",
     "knex": "^0.10.0",
     "lodash": "^4.13.1",
