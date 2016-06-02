@@ -9,6 +9,7 @@ var Promise = require("bluebird");
 var winston = require('winston');
 var expressWinston = require('express-winston');
 var _ = require('lodash');
+var mung = require('express-mung');
 
 module.exports = app; // for testing
 
@@ -75,6 +76,25 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
 });
 
 app.use(cors());
+
+if (process.env.DEV) {
+  function redact(body, req, res) {
+    function updateObject(obj) {
+      for (var i in obj) {
+        if (obj[i] instanceof Object) {
+          updateObject(obj[i]);
+        } else {
+          if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
+            obj[i] = new Date(obj[i]);
+          }
+        }
+      }
+    }
+    updateObject(body);
+    return body;
+  }
+  app.use(mung.json(redact));
+}
 
 if (process.env.DEV) {
   GLOBAL.knex = require('knex')({
