@@ -308,8 +308,12 @@ var T = {
       table.primary(["issue_id", "user_id"]);
     },
     get_assignees_for_issue_id: issueId => {
-      table(T.users).select(without_fields(T.users.fields, ["password"]))
-                    .whereIn("id", function() { this.select('user_id').from(T.issue_assignments.name) });
+      return table(T.users).select(T.users.fields.filter(item => item !== "password"))
+                           .whereIn("id", function() {
+                             this.select('user_id')
+                                  .from(T.issue_assignments.name)
+                                  .where("issue_id", issueId)
+                           });
     },
     assign: (issueId, userId) => table(T.issue_assignments).insert({ issue_id: issueId, user_id: userId }),
     remove: (issueId, userId) => table(T.issue_assignments).where({ issue_id: issueId, user_id: userId }).del(),

@@ -9,6 +9,7 @@
   "main": "app.js",
   "dependencies": {
     "alasql": "^0.2.6",
+    "check-types": "^7.0.0",
     "cors": "^2.7.1",
     "express": "^4.12.3",
     "express-mung": "^0.4.2",

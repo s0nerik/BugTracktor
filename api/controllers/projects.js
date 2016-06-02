@@ -26,6 +26,12 @@ function getProject(req, res) {
                                                     for (var i in issues) {
                                                       issues[i].project = { id: req.swagger.params.projectId.value };
                                                     }
+                                                    for (var i in issues) {
+                                                      for (var j in issues[i]) {
+                                                        if (j == "full_description")
+                                                        delete issues[i][j];
+                                                      }
+                                                    }
                                                     project.issues = issues;
                                                     return project;
                                                   }));
@@ -59,7 +65,6 @@ function getProject(req, res) {
   });
 
   query = query.then(project => {
-              console.log("project: "+JSON.stringify(project));
               if (project) res.json(project);
               else res.json(404, {message: "Not found"});
             });

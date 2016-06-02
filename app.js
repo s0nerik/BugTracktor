@@ -10,21 +10,22 @@ var winston = require('winston');
 var expressWinston = require('express-winston');
 var _ = require('lodash');
 var mung = require('express-mung');
+var check = require('check-types');
 
 module.exports = app; // for testing
 
-expressWinston.requestWhitelist.push('body');
-expressWinston.responseWhitelist.push('body');
-app.use(expressWinston.logger({
-  transports: [
-    new winston.transports.Console({
-      json: true,
-      colorize: true
-    })
-  ],
-  requestFilter: function (req, propName) { return _.get(req, propName); },
-  responseFilter: function (res, propName) { return _.get(res, propName); }
-}));
+// expressWinston.requestWhitelist.push('body');
+// expressWinston.responseWhitelist.push('body');
+// app.use(expressWinston.logger({
+//   transports: [
+//     new winston.transports.Console({
+//       json: true,
+//       colorize: true
+//     })
+//   ],
+//   requestFilter: function (req, propName) { return _.get(req, propName); },
+//   responseFilter: function (res, propName) { return _.get(res, propName); }
+// }));
 
 var containsAll = function (original, array) {
   return array.every(function(v,i) {
@@ -68,6 +69,26 @@ var config = {
 SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (err) { throw err; }
 
+  if (process.env.DEV) {
+    function updateObject(obj) {
+      for (var i in obj) {
+        console.log("Key: "+i);
+        if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
+          console.log("\nDATE: "+i+"("+obj[i]+")");
+          obj[i] = new Date(obj[i]).toISOString();
+        } else if (obj[i] instanceof Object) {
+          updateObject(obj[i]);
+        }
+      }
+    }
+    function redact(body, req, res) {
+      console.log("Original body:\n"+JSON.stringify(body));
+      updateObject(body);
+      console.log("\n\nUpdated body:\n"+JSON.stringify(body));
+    }
+    app.use(mung.json(redact));
+  }
+
   // install middleware
   swaggerExpress.register(app);
 
@@ -76,25 +97,6 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
 });
 
 app.use(cors());
-
-if (process.env.DEV) {
-  function redact(body, req, res) {
-    function updateObject(obj) {
-      for (var i in obj) {
-        if (obj[i] instanceof Object) {
-          updateObject(obj[i]);
-        } else {
-          if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
-            obj[i] = new Date(obj[i]);
-          }
-        }
-      }
-    }
-    updateObject(body);
-    return body;
-  }
-  app.use(mung.json(redact));
-}
 
 if (process.env.DEV) {
   GLOBAL.knex = require('knex')({

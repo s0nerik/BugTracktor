@@ -495,7 +495,6 @@ definitions:
         format: dateTime
       change:
         type: string
-        format: json
   Role:
     type: object
     properties:
