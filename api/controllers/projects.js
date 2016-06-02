@@ -23,6 +23,9 @@ function getProject(req, res) {
 
   query = query.then(project => T.project_issues.get(req.swagger.params.projectId.value)
                                                   .then(issues => {
+                                                    for (var i in issues) {
+                                                      issues[i].project = { id: req.swagger.params.projectId.value };
+                                                    }
                                                     project.issues = issues;
                                                     return project;
                                                   }));

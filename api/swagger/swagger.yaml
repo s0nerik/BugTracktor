@@ -389,8 +389,22 @@ definitions:
       issue_index:
         type: integer
         description: Index of the issue inside the project.
+      is_opened:
+        type: boolean
+        description: Whether the issue is opened for discussion.
+      is_active:
+        type: boolean
+        description: Whether the issue should be visible for project members.
       author:
         $ref: "#/definitions/User"
+      assignees:
+        type: array
+        items:
+          $ref: "#/definitions/User"
+      attachments:
+        type: array
+        items:
+          $ref: "#/definitions/IssueAttachment"
       project:
         $ref: "#/definitions/Project"
       type:
@@ -507,6 +521,15 @@ definitions:
       description:
         type: string
         description: Permission description.
+  IssueAttachment:
+    type: object
+    properties:
+      issue_id:
+        type: integer
+        description: Unique issue id this attachment belongs to.
+      url:
+        type: string
+        description: Attachment url.
   ProjectMember:
     type: object
     properties:
