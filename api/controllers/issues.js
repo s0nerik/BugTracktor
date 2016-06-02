@@ -27,6 +27,9 @@ function getIssue(req, res) {
                    .then(isMember => {
                      if (isMember) {
                        T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
+                                       .then(issue => T.issue_assignments.get_assignees_for_issue_id(issue.id)
+                                                                         .then(assignees => issue.assignees = assignees)
+                                                                         .return(issue))
                                        .then(info => res.json(info));
                      } else {
                        res.status(403).json({message: "You must be a project member to view its issues."});
