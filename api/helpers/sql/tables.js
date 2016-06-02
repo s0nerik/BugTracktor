@@ -65,6 +65,16 @@ function take_fields(obj, fields) {
   return newObj;
 }
 
+function take_fields_no_recurse(obj, fields) {
+  var newObj = {};
+  for (var key in obj) {
+    if (fields.indexOf(key) > -1) {
+      newObj[key] = obj[key];
+    }
+  }
+  return newObj;
+}
+
 function to_array_of_values(arrayOfObjects) {
   var arr = [];
   for (var obj in arrayOfObjects) {
@@ -271,7 +281,7 @@ var T = {
   issues: {
     name: "issues",
     fields: ["id", "type_id", "author_id", "short_description", "full_description", "creation_date"],
-    foreignFields: ["project", "type", "history"],
+    foreignFields: ["project", "type", "history", "attachments"],
     init: table => {
       table.increments("id");
 
@@ -343,7 +353,11 @@ var T = {
     new: (issueId, url) => table(T.issue_attachments).insert({issue_id: issueId, url: url}),
     get: issueId => table(T.issue_attachments).select("url")
                                               .where("issue_id", issueId),
-    remove: issueId => table(T.issue_assignments).where("issue_id", issueId).del(),
+    exists: (issueId, url) => table(T.issue_attachments).first()
+                                                        .where("issue_id", issueId)
+                                                        .andWhere("url", url)
+                                                        .then(item => !!item),
+    remove: (issueId, url) => table(T.issue_attachments).where("issue_id", issueId).andWhere("url", url).del(),
   },
   project_issues: {
     name: "project_issues",
@@ -391,9 +405,44 @@ var T = {
     get: (projectId, issueIndex) => { // projectId -> NotNull
       var where = issueIndex ? { issue_index: issueIndex, project_id: projectId } : { project_id: projectId };
       var query = table(T.project_issues).select().where(where).innerJoin(T.issues.name, "project_issues.issue_id", "issues.id");
-      if (issueIndex) query = query.first();
-      return query.then(data => without_nulls(take_fields(data, T.issues.fields + ["issue_index"]), true));
-    }
+      if (issueIndex) {
+        var localIssue;
+        query = query.first()
+                      .then(issue => localIssue = issue)
+                      // Add project the issue belongs to.
+                      .then(info => localIssue.project = { id: projectId })
+                      // Add issue creator to the response.
+                      .then(info => T.users.get_without_password(localIssue.author_id))
+                      .then(creator => localIssue.author = creator)
+                      // Add issue assignees to the response.
+                      .then(info => T.issue_assignments.get_assignees_for_issue_id(localIssue.id))
+                      .then(assignees => localIssue.assignees = assignees)
+                      // Add issue attachments to the response.
+                      .then(info => T.issue_attachments.get(localIssue.id))
+                      .then(attachments => localIssue.attachments = attachments)
+                      .then(data => localIssue);
+      }
+      return query.then(data => {
+        // console.log("\n\n\nproject_issues.get: "+JSON.stringify(data)+"\n\n\n");
+        return without_nulls(
+          take_fields(
+            data,
+            T.issues.fields.concat(T.users.fields).concat(T.issue_assignments.fields).concat(T.issue_attachments.fields).concat(["issue_index", "attachments", "assignees", "author", "project"]).filter(it => it != "password")
+          ),
+          true
+        );
+      });
+    },
+    update: (projectId, issueIndex, issue) => table(T.issues)
+                                    .whereIn("id", function() {
+                                      this.select("issue_id")
+                                          .from(T.project_issues.name)
+                                          .where("project_id", projectId)
+                                          .andWhere("issue_index", issueIndex);
+                                    })
+                                    .update(take_fields_no_recurse(issue, ["type_id", "short_description", "full_description", "creation_date"]))
+                                    // .update(take_fields(issue, ["type_id", "short_description", "full_description", "creation_date"]))
+                                    .then(data => T.project_issues.get(projectId, issueIndex)),
   },
   roles: {
     name: "roles",
@@ -940,15 +989,17 @@ var T = {
     }
 
     var issueAttachments = []
+    var k = 0;
     for (i = 1; i <= projects.length * testIssuesCnt; i++) {
       var rand = getRandomInt(0, 9);
       for (var j = 0; j < rand; j++) {
         issueAttachments.push(
           {
             issue_id: i,
-            url: "http://lorempixel.com/"+getRandomInt(100, 500)+"/"+getRandomInt(100, 500)
+            url: "http://lorempixel.com/"+(100 + k)+"/"+(100 + k)
           }
         );
+        k++;
       }
     }
 

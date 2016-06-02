@@ -72,9 +72,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (process.env.DEV) {
     function updateObject(obj) {
       for (var i in obj) {
-        console.log("Key: "+i);
         if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
-          console.log("\nDATE: "+i+"("+obj[i]+")");
           obj[i] = new Date(obj[i]).toISOString();
         } else if (obj[i] instanceof Object) {
           updateObject(obj[i]);
@@ -82,9 +80,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
       }
     }
     function redact(body, req, res) {
-      console.log("Original body:\n"+JSON.stringify(body));
       updateObject(body);
-      console.log("\n\nUpdated body:\n"+JSON.stringify(body));
     }
     app.use(mung.json(redact));
   }

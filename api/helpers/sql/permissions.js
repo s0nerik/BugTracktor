@@ -29,6 +29,10 @@ module.exports = {
     request_method: "POST",
     request_url: ""
   },
+  update_issue: {
+    request_method: "PATCH",
+    request_url: ""
+  },
   change_issue_status: {
     request_method: "PUT",
     request_url: ""
