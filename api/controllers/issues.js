@@ -26,16 +26,16 @@ function getIssue(req, res) {
   T.project_members.check_member(req.user.id, req.swagger.params.projectId.value)
                    .then(isMember => {
                      if (isMember) {
+                       var localIssue;
                        T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
-                                       .then(issue => {
-                                         // Add issue assignees to the response.
-                                         return T.issue_assignments.get_assignees_for_issue_id(issue.id)
-                                                                   .then(assignees => {
-                                                                     issue.assignees = assignees;
-                                                                     return issue;
-                                                                   })
-                                       })
-                                       .then(info => res.json(info));
+                                       .then(issue => localIssue = issue)
+                                       // Add issue creator to the response.
+                                       .then(info => T.users.get_without_password(localIssue.author_id))
+                                       .then(creator => localIssue.author = creator)
+                                       // Add issue assignees to the response.
+                                       .then(info => T.issue_assignments.get_assignees_for_issue_id(localIssue.id))
+                                       .then(assignees => localIssue.assignees = assignees)
+                                       .then(info => res.json(localIssue));
                      } else {
                        res.status(403).json({message: "You must be a project member to view its issues."});
                      }
@@ -43,9 +43,9 @@ function getIssue(req, res) {
 }
 
 function createIssue(req, res) {
-  req.swagger.params.issue.value.author = req.user;
+  req.swagger.params.issue.value.author_id = req.user.id;
   T.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
-                  .then(info => res.json(info));
+                  .then(issue => res.json(issue));
 }
 
 function updateIssue(req, res) {

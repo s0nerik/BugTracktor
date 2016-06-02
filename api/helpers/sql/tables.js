@@ -155,6 +155,7 @@ var T = {
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
+    get_without_password: id => get_with_id(T.users, id).then(data => without_fields(data, ["password"])),
     get_with_email: email => get_with_field_value(T.users, "email", email),
   },
   projects: {
@@ -269,7 +270,7 @@ var T = {
   },
   issues: {
     name: "issues",
-    fields: ["id", "type_id", "short_description", "full_description", "creation_date"],
+    fields: ["id", "type_id", "author_id", "short_description", "full_description", "creation_date"],
     foreignFields: ["project", "type", "history"],
     init: table => {
       table.increments("id");
@@ -280,11 +281,17 @@ var T = {
            .references("id")
            .inTable(T.issue_types.name);
 
+      table.integer("author_id")
+           .unsigned()
+           .notNullable()
+          .references("id")
+          .inTable(T.users.name);
+
       table.dateTime("creation_date");
       table.text("short_description");
       table.text("full_description");
     },
-    new: issue => insert_without(T.issues, issue, ["id", "project", "type", "history", "creation_date"]),
+    new: issue => insert_only(T.issues, issue, ["type_id", "author_id", "short_description", "full_description", "creation_date"]),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
     get: id => get_with_id(T.issues, id),
     remove: id => remove_with_id(T.issues, id),
@@ -349,7 +356,6 @@ var T = {
         .where('project_id', projectId)
         .then(indexQueryResult => {
           var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
-          console.log("Result: "+lastProjectIssueIndex);
           return [createdIssue, lastProjectIssueIndex+1];
         })
       )
@@ -691,12 +697,12 @@ var T = {
       {email: "developer5@gmail.com",   password: "1", nickname: "hammett",       real_name: "Kirk Hammett",    avatar_url: "http://api.adorable.io/avatar/256/5"   },
       {email: "manager@gmail.com",      password: "1", nickname: "lars_ulrich",   real_name: "Lars Ulrich",     avatar_url: "http://api.adorable.io/avatar/256/6"   },
       {email: "manager2@gmail.com",     password: "1", nickname: "dave_mustaine", real_name: "Dave Mustaine",   avatar_url: "http://api.adorable.io/avatar/256/7"   },
-      {email: "manager3@gmail.com",     password: "1", nickname: "corey_taylor,", real_name: "Corey Taylor",    avatar_url: "http://api.adorable.io/avatar/256/8"   },
+      {email: "manager3@gmail.com",     password: "1", nickname: "corey_taylor",  real_name: "Corey Taylor",    avatar_url: "http://api.adorable.io/avatar/256/8"   },
       {email: "manager4@gmail.com",     password: "1", nickname: "danny_worsnop", real_name: "Danny Worsnop",   avatar_url: "http://api.adorable.io/avatar/256/9"   },
       {email: "manager5@gmail.com",     password: "1", nickname: "denis_stoff",   real_name: "Denis Stoff",     avatar_url: "http://api.adorable.io/avatar/256/10"  },
       {email: "tester@gmail.com",       password: "1", nickname: "ben_bruce",     real_name: "Ben Bruce",       avatar_url: "http://api.adorable.io/avatar/256/11"  },
       {email: "tester2@gmail.com",      password: "1", nickname: "kellin_quinn",  real_name: "Kellin Quinn",    avatar_url: "http://api.adorable.io/avatar/256/12"  },
-      {email: "tester3@gmail.com",      password: "1", nickname: "johnny_cash,",  real_name: "Johnny Cash",     avatar_url: "http://api.adorable.io/avatar/256/13"  },
+      {email: "tester3@gmail.com",      password: "1", nickname: "johnny_cash",   real_name: "Johnny Cash",     avatar_url: "http://api.adorable.io/avatar/256/13"  },
       {email: "tester4@gmail.com",      password: "1", nickname: "vic_fuentes",   real_name: "Vic Fuentes",     avatar_url: "http://api.adorable.io/avatar/256/14"  },
       {email: "tester5@gmail.com",      password: "1", nickname: "ronnie_radke",  real_name: "Ronnie Radke",    avatar_url: "http://api.adorable.io/avatar/256/15"  },
       {email: "admin@gmail.com",        password: "1", nickname: "oxxxymiron",    real_name: "Miron Fedorov",   avatar_url: "http://api.adorable.io/avatar/256/16"  },
@@ -884,6 +890,7 @@ var T = {
       issues.push(
         {
           type_id: (i * Math.floor(commonIssueTypes.length / testIssuesCnt)) % commonIssueTypes.length + 1,
+          author_id: i % 10 + 6,
           short_description: "Test issue (id: "+i+")",
           full_description: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.",
           creation_date: randomDate(new Date(2012, 0, 1), new Date())
