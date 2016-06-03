@@ -345,7 +345,7 @@ var T = {
            .references("id")
            .inTable(T.issues.name);
 
-      table.text("url")
+      table.string("url")
            .notNullable();
 
       table.primary(["issue_id", "url"]);
