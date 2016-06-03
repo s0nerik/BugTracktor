@@ -583,6 +583,23 @@ var T = {
               .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
         })
         .then(data => without_nulls(data)),
+    get_member: (userId, projectId) =>
+      table(T.users)
+        .first(T.users.fields)
+        .innerJoin(T.project_members.name, function () {
+          this.on(T.project_members.name+".user_id", knex.raw('?', [userId]))
+              .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
+        })
+        .then(user => {
+          var member  = { user: user };
+          return T.project_member_roles.get_all_user_roles_in_project(projectId, userId)
+                                      .then(roles => {
+                                        member.roles = roles;
+                                        return member;
+                                      });
+        })
+        .then(member => Object.assign(member, {project: {id: projectId}}))
+        .then(data => without_nulls(data)),
   },
   project_member_roles: {
     name: "project_member_roles",

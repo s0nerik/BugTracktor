@@ -56,6 +56,13 @@ parameters:
     required: true
     type: integer
     format: int64
+  memberIdParam:
+    in: path
+    name: memberId
+    description: ID of the project member.
+    required: true
+    type: integer
+    format: int64
   issueIndexParam:
     in: path
     name: issueIndex
@@ -376,6 +383,75 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/IssueType"
+  /projects/{projectId}/members:
+    x-swagger-router-controller: members
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+    get:
+      operationId: getMembers
+      description: Gets a list of members.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ProjectMember"
+    post:
+      operationId: createMember
+      description: Creates a new project member.
+      parameters:
+        - in: body
+          name: member
+          description: The member to create.
+          required: true
+          schema:
+            $ref: '#/definitions/ProjectMember'
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ProjectMember"
+  /projects/{projectId}/members/{memberId}:
+    x-swagger-router-controller: members
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+      - $ref: "#/parameters/memberIdParam"
+    get:
+      operationId: getMember
+      description: Gets a member with a given id.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ProjectMember"
+    patch:
+      operationId: updateMember
+      description: Updates a member with a new data.
+      parameters:
+        - in: body
+          name: member
+          description: The updated member.
+          required: true
+          schema:
+            $ref: "#/definitions/ProjectMember"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/ProjectMember"
+    delete:
+      operationId: deleteMember
+      description: Deletes a given projevt member.
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Success"
 
 ## Data classes
 
