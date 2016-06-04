@@ -63,21 +63,21 @@ function getProject(req, res) {
                                                    return project;
                                                  }));
 
-  query = query.then(project => {
-    let users = project["members"];
-    project["members"] = [];
-    var innerQuery = Promise.resolve(project);
-    for (let user in users) {
-      var innerQuery = innerQuery.then(project =>
-        T.project_member_roles.get_all_user_roles_in_project(project.id, users[user].id)
-                              .then(roles => {
-                                project["members"].push({user: users[user], roles: roles});
-                                return project;
-                              })
-      );
-    }
-    return innerQuery;
-  });
+  // query = query.then(project => {
+  //   let users = project["members"];
+  //   project["members"] = [];
+  //   var innerQuery = Promise.resolve(project);
+  //   for (let user in users) {
+  //     var innerQuery = innerQuery.then(project =>
+  //       T.project_member_roles.get_all_user_roles_in_project(project.id, users[user].id)
+  //                             .then(roles => {
+  //                               project["members"].push({user: users[user], roles: roles});
+  //                               return project;
+  //                             })
+  //     );
+  //   }
+  //   return innerQuery;
+  // });
 
   query = query.then(project => {
               if (project) res.json(project);

@@ -7,9 +7,6 @@
   "loadEagerly": [
     "api/**/*.js"
   ],
-  "dontLoad": [
-
-  ],
   "plugins": {
     "node-express": {},
     "complete_strings": {},

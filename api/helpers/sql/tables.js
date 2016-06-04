@@ -582,6 +582,20 @@ var T = {
           this.on(T.project_members.name+".user_id", T.users.name+".id")
               .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
         })
+        .then(users => users.map(it => Object.assign({project:{id:projectId}}, {user: it})))
+        .then(members => {
+          var innerQuery = Promise.resolve(members);
+          for (let i in members) {
+            var innerQuery = innerQuery.then(member =>
+              T.project_member_roles.get_all_user_roles_in_project(projectId, members[i].user.id)
+                                    .then(roles => {
+                                      members[i] = Object.assign(members[i], {roles: roles})
+                                      return members;
+                                    })
+            );
+          }
+          return innerQuery;
+        })
         .then(data => without_nulls(data)),
     get_member: (userId, projectId) =>
       table(T.users)
