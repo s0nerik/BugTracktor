@@ -66,7 +66,6 @@ module.exports = {
         arr.push(item);
       }
     }
-    console.log("Permissions: asArray: "+arr);
     return arr;
   }
 }

@@ -11,21 +11,22 @@ var expressWinston = require('express-winston');
 var _ = require('lodash');
 var mung = require('express-mung');
 var check = require('check-types');
+var interceptor = require('express-interceptor');
 
 module.exports = app; // for testing
 
-// expressWinston.requestWhitelist.push('body');
-// expressWinston.responseWhitelist.push('body');
-// app.use(expressWinston.logger({
-//   transports: [
-//     new winston.transports.Console({
-//       json: true,
-//       colorize: true
-//     })
-//   ],
-//   requestFilter: function (req, propName) { return _.get(req, propName); },
-//   responseFilter: function (res, propName) { return _.get(res, propName); }
-// }));
+expressWinston.requestWhitelist.push('body');
+expressWinston.responseWhitelist.push('body');
+app.use(expressWinston.logger({
+  transports: [
+    new winston.transports.Console({
+      json: true,
+      colorize: true
+    })
+  ],
+  // requestFilter: function (req, propName) { return _.get(req, propName); },
+  // responseFilter: function (res, propName) { return _.get(res, propName); }
+}));
 
 var containsAll = function (original, array) {
   return array.every(function(v,i) {
@@ -97,23 +98,23 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
 app.use(cors());
 
 if (process.env.DEV) {
-  GLOBAL.knex = require('knex')({
+  global.knex = require('knex')({
     client: 'sqlite3',
     connection: {
       filename: "./db.sqlite"
     },
     // useNullAsDefault: true,
-    debug: true
+    // debug: true
   });
 } else if (process.env.JAWSDB_URL) {
-  GLOBAL.knex = require('knex')({
+  global.knex = require('knex')({
     client: 'mysql',
     connection: process.env.JAWSDB_URL,
     // useNullAsDefault: true,
     debug: true
   });
 } else if (process.env.JAWSDB_MARIA_URL) {
-  GLOBAL.knex = require('knex')({
+  global.knex = require('knex')({
     client: 'mysql',
     connection: process.env.JAWSDB_MARIA_URL,
     searchPath: 'knex,public',
@@ -121,7 +122,7 @@ if (process.env.DEV) {
     debug: true
   });
 } else if (process.env.CLEARDB_DATABASE_URL) {
-  GLOBAL.knex = require('knex')({
+  global.knex = require('knex')({
     client: 'mysql',
     connection: process.env.CLEARDB_DATABASE_URL,
     searchPath: 'knex,public',
@@ -129,7 +130,7 @@ if (process.env.DEV) {
     debug: true
   });
 } else {
-  GLOBAL.knex = require('knex')({
+  global.knex = require('knex')({
     client: 'pg',
     connection: process.env.DATABASE_URL,
     searchPath: 'knex,public',

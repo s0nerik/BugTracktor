@@ -24,7 +24,8 @@ function createMember(req, res) {
 }
 
 function getMembers(req, res) {
-
+  T.project_members.get_members_by_project_id(req.swagger.params.projectId.value)
+                    .then(members => res.json(members));
 }
 
 function getMember(req, res) {
