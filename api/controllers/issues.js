@@ -56,80 +56,138 @@ function createIssue(req, res) {
 }
 
 function updateIssue(req, res) {
-  T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value)
-                  .then(localIssue => {
-                    // console.log("\n\n\nT.project_issues.get: "+JSON.stringify(issue));
-                    if (localIssue) {
-                      var diffs = {};
-                      // var diffs = utils.keyValueDiffs(localIssue, req.swagger.params.issue.value);
-                      console.log("Old Issue: "+JSON.stringify(localIssue));
-                      console.log("New Issue: "+JSON.stringify(req.swagger.params.issue.value));
-                      // console.log("Diff: "+JSON.stringify(diffs));
+  var projectId = req.swagger.params.projectId.value;
+  var issueIndex = req.swagger.params.issueIndex.value;
+  var newIssue = req.swagger.params.issue.value;
 
-                      let newIssue = req.swagger.params.issue.value;
-                      newIssue.id = localIssue.id;
-                      return T.project_issues.update(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value, newIssue)
-                                              .then(issue => {
-                                                // console.log("\n\n\nT.project_issues.update.then(1): "+JSON.stringify(issue));
-                                                // TODO: save actual diff type into the table
-                                                if (Object.keys(diffs).length > 0) {
-                                                  var change = Object.assign({
-                                                    issue_id: issue.id,
-                                                    date: new Date().toISOString(),
-                                                    author_id: req.user.id
-                                                  }, { change: JSON.stringify(utils.produceIssueChangeInfo(diffs)) });
-                                                  return T.issue_changes.new(change)
-                                                                        .return(issue);
-                                                } else {
-                                                  return issue;
-                                                }
-                                              })
-                                              // Update attachments if should
-                                              .then(issue => {
-                                                // console.log("\n\n\nT.project_issues.update.then(2): "+JSON.stringify(issue));
-                                                var attachments = newIssue.attachments;
-                                                if (attachments) {
-                                                  var promise = Promise.resolve(true);
-                                                  promise = promise.then(data => T.issue_attachments.get(newIssue.id))
-                                                                    .then(dbAttachments => {
-                                                                      console.log("\n\n\attachments: "+JSON.stringify(attachments));
-                                                                      console.log("\n\n\dbAttachments: "+JSON.stringify(dbAttachments));
-                                                                      var toRemove = _.differenceBy(dbAttachments, attachments, x => x.url);
-                                                                      console.log("\n\n\ntoRemove: "+JSON.stringify(toRemove));
-                                                                      if (toRemove) {
-                                                                        var localPromise = Promise.resolve(true);
-                                                                        for (var i in toRemove) {
-                                                                          let rem = toRemove[i];
-                                                                          localPromise = localPromise.then(x => T.issue_attachments.remove(newIssue.id, rem.url));
-                                                                        }
-                                                                        return localPromise;
-                                                                      } else {
-                                                                        return true;
-                                                                      }
-                                                                    });
-                                                  for(var i in attachments) {
-                                                    if (attachments[i].url) {
-                                                      let att = attachments[i];
-                                                      promise = promise.then(data => T.issue_attachments.exists(newIssue.id, att.url))
-                                                                        .then(exists => {
-                                                                          if (!exists) {
-                                                                            return T.issue_attachments.new(newIssue.id, att.url);
-                                                                          } else {
-                                                                            return true;
-                                                                          }
-                                                                        });
-                                                    }
-                                                  }
-                                                  return promise.then(data => T.project_issues.get(req.swagger.params.projectId.value, req.swagger.params.issueIndex.value));
-                                                } else {
-                                                  return issue;
-                                                }
-                                              })
-                                              .then(issue => res.json(issue));
-                    } else {
-                      res.status(404).json({message: "Issue not found."});
-                    }
-                  });
+  var issueNotFound = false;
+
+  // Get original issue
+  var query = T.project_issues.get(projectId, issueIndex);
+
+  var originalIssue;
+
+  // Update issue
+  query = query.then(localIssue => {
+    if (localIssue) {
+      originalIssue = localIssue;
+
+      newIssue.id = localIssue.id;
+      return T.project_issues.update(projectId, issueIndex, newIssue);
+    } else {
+      issueNotFound = true;
+    }
+  });
+
+  // Save issue changes info
+  query = query.then(localIssue => {
+    if (issueNotFound) return localIssue;
+
+    var diffs = {};
+    // var diffs = utils.keyValueDiffs(localIssue, req.swagger.params.issue.value);
+    console.log("Old Issue: "+JSON.stringify(originalIssue));
+    console.log("New Issue: "+JSON.stringify(newIssue));
+    // console.log("Diff: "+JSON.stringify(diffs));
+
+    // console.log("\n\n\nT.project_issues.update.then(1): "+JSON.stringify(issue));
+    // TODO: save actual diff type into the table
+    if (Object.keys(diffs).length > 0) {
+      var change = Object.assign({
+        issue_id: localIssue.id,
+        date: new Date().toISOString(),
+        author_id: req.user.id
+      }, { change: JSON.stringify(utils.produceIssueChangeInfo(diffs)) });
+      return T.issue_changes.new(change)
+                            .return(localIssue);
+    } else {
+      return localIssue;
+    }
+  })
+
+  // Update attachments if should
+  query = query.then(localIssue => {
+    if (issueNotFound) return localIssue;
+    // console.log("\n\n\nT.project_issues.update.then(2): "+JSON.stringify(issue));
+    var attachments = newIssue.attachments;
+    if (attachments) {
+      var promise = Promise.resolve(true);
+      promise = promise.then(data => T.issue_attachments.get(newIssue.id))
+                        .then(dbAttachments => {
+                          console.log("\n\n\aAttachments: "+JSON.stringify(attachments));
+                          console.log("\n\n\ndbAttachments: "+JSON.stringify(dbAttachments));
+                          var toRemove = _.differenceBy(dbAttachments, attachments, x => x.url);
+                          console.log("\n\n\ntoRemove: "+JSON.stringify(toRemove));
+                          if (toRemove) {
+                            var localPromise = Promise.resolve(true);
+                            for (var i in toRemove) {
+                              let rem = toRemove[i];
+                              localPromise = localPromise.then(x => T.issue_attachments.remove(newIssue.id, rem.url));
+                            }
+                            return localPromise;
+                          } else {
+                            return true;
+                          }
+                        });
+      for(var i in attachments) {
+        if (attachments[i].url) {
+          let att = attachments[i];
+          promise = promise.then(data => T.issue_attachments.exists(newIssue.id, att.url))
+                            .then(exists => {
+                              if (!exists) {
+                                return T.issue_attachments.new(newIssue.id, att.url);
+                              } else {
+                                return true;
+                              }
+                            });
+        }
+      }
+      return promise;
+    } else {
+      return localIssue;
+    }
+  });
+
+  // Update assignees if should
+  query = query.then(localIssue => {
+    if (issueNotFound) return localIssue;
+
+    if (_.isEqual(newIssue.assignees, originalIssue.assignees)) {
+      return localIssue;
+    } else {
+      var toRemove = _.differenceBy(originalIssue.assignees, newIssue.assignees, x => x.id);
+      var toAdd = _.differenceBy(newIssue.assignees, originalIssue.assignees, x => x.id);
+
+      var localPromise = Promise.resolve(true);
+      if (toRemove) {
+        for (var i in toRemove) {
+          let rem = toRemove[i];
+          localPromise = localPromise.then(x => T.issue_assignments.remove(newIssue.id, rem.id));
+        }
+      }
+      if (toAdd) {
+        for (var i in toAdd) {
+          let add = toAdd[i];
+          localPromise = localPromise.then(x => T.issue_assignments.assign(newIssue.id, add.id));
+        }
+      }
+      return localPromise;
+    }
+  });
+
+  // Get updated issue
+  query = query.then(data => {
+    if (issueNotFound) return data;
+    return T.project_issues.get(projectId, issueIndex);
+  });
+
+  // Return result
+  query = query.then(localIssue => {
+    if (issueNotFound) {
+      res.status(404).json({message: "Issue not found."});
+    } else {
+      res.json(localIssue)
+    }
+  });
 }
 
 function getIssueChanges(req, res) {
