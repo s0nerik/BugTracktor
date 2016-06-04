@@ -35,3 +35,5 @@ config/runtime.yaml
 
 .DS_Store
 /*.env
+
+db.sqlite
