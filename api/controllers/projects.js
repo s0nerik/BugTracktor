@@ -18,83 +18,53 @@ function listProjects(req, res) {
 }
 
 function getProject(req, res) {
-  var query = Promise.resolve(true);
-  query = T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
-
-  // Set project issues
-  query = query.then(project => T.project_issues.get(req.swagger.params.projectId.value)
-                                                  .then(issues => {
-                                                    console.log("\n\n\nproject_issues.get(projectId): "+JSON.stringify(issues));
-                                                    for (var i in issues) {
-                                                      issues[i].project = { id: req.swagger.params.projectId.value };
-                                                    }
-                                                    for (var i in issues) {
-                                                      for (var j in issues[i]) {
-                                                        if (j == "full_description")
-                                                        delete issues[i][j];
-                                                      }
-                                                    }
-                                                    project.issues = issues;
-                                                    return project;
-                                                  }));
-
-  // Set issue authors
-  query = query.then(project => {
-    var innerQuery = Promise.resolve(true);
-    for (var i in project.issues) {
-      let issue = project.issues[i];
-      innerQuery = innerQuery.then(data => T.users.get_without_password(issue.author_id))
-                             .then(author => issue.author = author);
-    }
-    return innerQuery.return(project);
-  });
-
-  // Set project creator
-  query = query.then(project => T.project_creators.get_creator_by_project_id(req.swagger.params.projectId.value)
-                                                  .then(creator => {
-                                                    project.creator = creator;
-                                                    return project;
-                                                  }));
-
-  // Set project members
-  query = query.then(project => T.project_members.get_members_by_project_id(req.swagger.params.projectId.value)
-                                                 .then(members => { // not a ProjectMember, just a User
-                                                   project["members"] = members;
-                                                   return project;
-                                                 }));
-
-  // query = query.then(project => {
-  //   let users = project["members"];
-  //   project["members"] = [];
-  //   var innerQuery = Promise.resolve(project);
-  //   for (let user in users) {
-  //     var innerQuery = innerQuery.then(project =>
-  //       T.project_member_roles.get_all_user_roles_in_project(project.id, users[user].id)
-  //                             .then(roles => {
-  //                               project["members"].push({user: users[user], roles: roles});
-  //                               return project;
-  //                             })
-  //     );
-  //   }
-  //   return innerQuery;
-  // });
-
-  query = query.then(project => {
+  T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
+            .then(project => {
               if (project) res.json(project);
               else res.json(404, {message: "Not found"});
             });
 }
 
 function updateProject(req, res) {
-  T.project_members.check_member(req.user.id, req.swagger.params.projectId.value)
-                   .then(isMember => {
-                     if (isMember) {
-                       req.swagger.params.project.value.id = req.swagger.params.projectId.value;
-                       T.projects.update(req.swagger.params.project.value).then(data => res.json(data));
-                     } else {
-                       res.json(403, {message: "You're not a member of this project"});
-                     }
-                   })
+  var projectId = req.swagger.params.projectId.value;
+  var newProject = req.swagger.params.project.value;
+  newProject.id = projectId;
+
+  var originalProject;
+  var isMember = true;
+
+  var query = T.project_members.check_member(req.user.id, projectId)
+                               .then(checkResult => isMember = checkResult);
+
+  // Get the original project
+  query = query.then(data => {
+    if (!isMember) return data;
+    return originalProject = T.projects.get_user_project_by_id(req.user, projectId);
+  });
+
+  // Update project's main fields
+  query = query.then(data => {
+    if (!isMember || !originalProject) return data;
+    return T.projects.update(newProject);
+  });
+
+  // Get the updated project
+  query = query.then(data => {
+    if (!isMember || !originalProject) return data;
+    return T.projects.get_user_project_by_id(req.user, projectId);
+  });
+
+  return query.then(data => {
+    if (isMember) {
+      if (originalProject) {
+        res.json(data);
+      } else {
+        res.json(404, {message: "Project with a given id is not found."});
+      }
+    } else {
+      res.json(403, {message: "You're not a member of this project"});
+    }
+  });
 }
 
 function createProject(req, res) {

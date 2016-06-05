@@ -3,6 +3,7 @@
 var crypto = require('crypto');
 var Promise = require("bluebird");
 var permissions = require("../sql/permissions");
+var _ = require("lodash");
 
 /**
  * Delete all null (or undefined) properties from an object.
@@ -117,6 +118,14 @@ function update_where_id(table, object, fields) {
               .then(data => without_nulls(data, true))
 }
 
+function update_where_id_no_recurse(table, object, fields) {
+  return knex.where("id", "=", object.id)
+              .update(without_nulls(take_fields_no_recurse(object, fields)))
+              .table(table.name)
+              .then(affectedRows => table.get(object.id))
+              .then(data => without_nulls(data, true))
+}
+
 function get_with_id(table, id) {
   var query;
   if (id) {
@@ -180,7 +189,7 @@ var T = {
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
                                 .then(data => T.project_creators.new(userId, data.id).return(data)),
-    update: project => update_where_id(T.projects, project, ["name", "short_description", "full_description"]),
+    update: project => update_where_id_no_recurse(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => get_with_id(T.projects, id),
     get_user_projects: user => table(T.projects).select()
                                                 .whereIn("id", function() {
@@ -194,19 +203,39 @@ var T = {
                                                       })
                                                 })
                                                 .then(data => without_nulls(data)),
-    get_user_project_by_id: (user, projectId) => table(T.projects).first()
-                                                                  .whereIn("id", function() {
-                                                                    this.select('project_id')
-                                                                        .from(T.project_members.name)
-                                                                        .where("user_id", user.id)
-                                                                        .union(function() {
-                                                                          this.select("project_id")
-                                                                              .from(T.project_creators.name)
-                                                                              .where("user_id", user.id)
-                                                                        })
-                                                                  })
-                                                                  .andWhere("id", projectId)
-                                                                  .then(data => without_nulls(data)),
+    get_user_project_by_id: (user, projectId) => {
+      var project = {};
+      var query = table(T.projects).first()
+                                    .whereIn("id", function() {
+                                      this.select('project_id')
+                                          .from(T.project_members.name)
+                                          .where("user_id", user.id)
+                                          .union(function() {
+                                            this.select("project_id")
+                                                .from(T.project_creators.name)
+                                                .where("user_id", user.id)
+                                          })
+                                    })
+                                    .andWhere("id", projectId)
+                                    .then(data => without_nulls(data));
+      query = query.then(innerProject => project = innerProject);
+      // Set issues
+      query = query.then(data => T.project_issues.get(projectId, null, true));
+      query = query.then(issues => project.issues = issues);
+      // Set creator
+      query = query.then(data => T.project_creators.get_creator_by_project_id(projectId));
+      query = query.then(creator => project.creator = creator);
+      // Set project members
+      query = query.then(data => T.project_members.get_members_by_project_id(projectId))
+      query = query.then(members => project.members = members);
+
+      return query.then(data => {
+        if (project.id)
+          return project;
+        else
+          return undefined;
+      });
+    },
     remove: id => remove_with_id(T.projects, id).then(data => T.project_creators.remove_by_project_id(id)),
   },
   project_creators: {
@@ -402,7 +431,7 @@ var T = {
                     })
                     .then(data => T.project_issues.get(projectId, args[1]))
       ),
-    get: (projectId, issueIndex) => { // projectId -> NotNull
+    get: (projectId, issueIndex, withoutFullDescription) => { // projectId -> NotNull
       var where = issueIndex ? { issue_index: issueIndex, project_id: projectId } : { project_id: projectId };
       var query = table(T.project_issues).select().where(where).innerJoin(T.issues.name, "project_issues.issue_id", "issues.id");
       if (issueIndex) {
@@ -421,13 +450,56 @@ var T = {
                       .then(info => T.issue_attachments.get(localIssue.id))
                       .then(attachments => localIssue.attachments = attachments)
                       .then(data => localIssue);
+      } else {
+        var issues;
+        // Add project the issues belongs to.
+        query = query.then(localIssues => issues = localIssues)
+                      .then(info => issues = issues.map(it => Object.assign(it, {project: { id: projectId }})));
+        // Set creators for every issue
+        query = query.then(data => {
+          var localQuery = Promise.resolve(true);
+          for (var i in issues) {
+            let localIssue = issues[i];
+            localQuery = localQuery.then(info => T.users.get_without_password(localIssue.author_id))
+                                    .then(creator => localIssue.author = creator);
+          }
+          return localQuery;
+        });
+        // Set assignees for every issue
+        query = query.then(data => {
+          var localQuery = Promise.resolve(true);
+          for (var i in issues) {
+            let localIssue = issues[i];
+            localQuery = localQuery.then(info => T.issue_assignments.get_assignees_for_issue_id(localIssue.id))
+                                    .then(assignees => localIssue.assignees = assignees);
+          }
+          return localQuery;
+        });
+        // Set issue attachments for every issue
+        query = query.then(data => {
+          var localQuery = Promise.resolve(true);
+          for (var i in issues) {
+            let localIssue = issues[i];
+            localQuery = localQuery.then(info => T.issue_attachments.get(localIssue.id))
+                                    .then(attachments => localIssue.attachments = attachments);
+          }
+          return localQuery;
+        });
+
+        query = query.then(data => issues);
       }
       return query.then(data => {
-        // console.log("\n\n\nproject_issues.get: "+JSON.stringify(data)+"\n\n\n");
+        var issueFields = withoutFullDescription ? _.without(T.issues.fields, "full_description") : T.issues.fields;
         return without_nulls(
           take_fields(
             data,
-            T.issues.fields.concat(T.users.fields).concat(T.issue_assignments.fields).concat(T.issue_attachments.fields).concat(["issue_index", "attachments", "assignees", "author", "project"]).filter(it => it != "password")
+            _.union(
+              issueFields,
+              _.without(T.users.fields, "password"),
+              T.issue_assignments.fields,
+              T.issue_attachments.fields,
+              ["issue_index", "attachments", "assignees", "author", "project"]
+            )
           ),
           true
         );

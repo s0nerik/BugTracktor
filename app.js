@@ -104,7 +104,7 @@ if (process.env.DEV) {
       filename: "./db.sqlite"
     },
     // useNullAsDefault: true,
-    // debug: true
+    debug: true
   });
 } else if (process.env.JAWSDB_URL) {
   global.knex = require('knex')({
