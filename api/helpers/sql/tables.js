@@ -654,7 +654,7 @@ var T = {
           this.on(T.project_members.name+".user_id", T.users.name+".id")
               .andOn(T.project_members.name+".project_id", knex.raw('?', [projectId]))
         })
-        .then(users => users.map(it => Object.assign({project:{id:projectId}}, {user: it})))
+        .then(users => users.map(it => Object.assign({}, {project:{id:projectId}}, {user: it})))
         .then(members => {
           var innerQuery = Promise.resolve(members);
           for (let i in members) {

@@ -4,6 +4,7 @@ var util = require('util');
 
 var T = require('../helpers/sql/tables');
 var Promise = require("bluebird");
+var _ = require("lodash");
 
 module.exports = {
   listProjects: listProjects,
@@ -39,13 +40,45 @@ function updateProject(req, res) {
   // Get the original project
   query = query.then(data => {
     if (!isMember) return data;
-    return originalProject = T.projects.get_user_project_by_id(req.user, projectId);
+    return T.projects.get_user_project_by_id(req.user, projectId);
   });
+
+  query = query.then(localProject => {
+    if (!isMember) return data;
+    originalProject = localProject;
+  })
 
   // Update project's main fields
   query = query.then(data => {
     if (!isMember || !originalProject) return data;
     return T.projects.update(newProject);
+  });
+
+  // Update members if should
+  query = query.then(data => {
+    if (!isMember || !originalProject) return data;
+
+    if (_.isEqual(newMembers, originalMembers)) {
+      return data;
+    } else {
+      var toRemove = _.differenceBy(originalProject.members, newProject.members, x => x.user.id);
+      var toAdd = _.differenceBy(newProject.members, originalProject.members, x => x.user.id);
+
+      var localPromise = Promise.resolve(true);
+      if (toRemove) {
+        for (var i in toRemove) {
+          let rem = toRemove[i];
+          localPromise = localPromise.then(x => T.project_members.deny_member(rem.user.id, newProject.id));
+        }
+      }
+      if (toAdd) {
+        for (var i in toAdd) {
+          let add = toAdd[i];
+          localPromise = localPromise.then(x => T.project_members.make_member(add.user.id, newProject.id));
+        }
+      }
+      return localPromise;
+    }
   });
 
   // Get the updated project
