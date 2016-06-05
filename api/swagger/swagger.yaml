@@ -496,6 +496,35 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Success"
+  /projects/{projectId}/roles:
+    x-swagger-router-controller: roles
+    parameters:
+      - $ref: "#/parameters/projectIdParam"
+    get:
+      operationId: listRoles
+      description: Gets a list of available roles.
+      responses:
+        200:
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Role"
+    post:
+      operationId: createRole
+      description: Creates a new role for a given project.
+      parameters:
+        - in: body
+          name: member
+          description: The member to create.
+          required: true
+          schema:
+            $ref: '#/definitions/Role'
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Role"
 
 ## Data classes
 

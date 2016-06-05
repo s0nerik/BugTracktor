@@ -625,8 +625,53 @@ var T = {
 
       table.primary(["role_id", "permission_name"]);
     },
+    get: roleId =>
+      table(T.role_permissions)
+        .select(T.permissions.fields)
+        .innerJoin(T.permissions.name, "permissions.name", "role_permissions.permission_name")
+        .where('role_id', roleId),
     give_permission: (roleId, permissionName) => table(T.role_permissions).insert({role_id: roleId, permission_name: permissionName}),
     deny_permission: (roleId, permissionName) => table(T.role_permissions).where('role_id', roleId).andWhere('permission_name', permissionName).del(),
+  },
+  project_roles: {
+    name: "project_roles",
+    fields: ["project_id", "role_id"],
+    init: table => {
+      table.integer("project_id")
+            .unsigned()
+            .notNullable()
+           .references("id")
+           .inTable(T.projects.name);
+      table.integer("role_id")
+            .unsigned()
+            .notNullable()
+           .references("id")
+           .inTable(T.roles.name);
+
+      table.primary(["project_id", "role_id"]);
+    },
+    add: (projectId, roleId) => table(T.project_roles).insert({project_id: projectId, role_id: roleId}),
+    remove: (projectId, roleId) => table(T.project_roles).where('project_id', projectId).andWhere('role_id', roleId).del(),
+    get: projectId => {
+      var projectRoles = [];
+      var query = table(T.project_roles)
+                  .select(T.roles.fields)
+                  .innerJoin(T.roles.name, "roles.id", "project_roles.role_id")
+                  .where('project_id', projectId);
+
+      query = query.then(roles => projectRoles = roles);
+      query = query.then(data => {
+        var innerQuery = Promise.resolve(projectRoles);
+        for (var i in projectRoles) {
+          let role = projectRoles[i];
+          innerQuery = innerQuery.then(data => T.role_permissions.get(role.id))
+                                  .then(permissions => role.permissions = permissions);
+        }
+        return innerQuery;
+      });
+
+      return query.then(data => projectRoles);
+    },
   },
   project_members: {
     name: "project_members",
@@ -928,22 +973,29 @@ var T = {
       }
     ];
 
-    var roles = [{name: "Admin", description: "Admin"}];
-    var projectRoles = [
-      {name: "Developer", description: "Developer"},
-      {name: "Manager", description: "Manager"},
-      {name: "Tester", description: "Tester"}
+    // Overall roles
+    var roles = [{name: "Admin", description: "Steals cables, monitors etc."}];
+
+    // Template roles
+    var projectRolesTemplate = [
+      {name: "Developer", description: "Does everything."},
+      {name: "Manager", description: "Works with his mouth."},
+      {name: "Tester", description: "Checks what developer did."}
     ];
+
+    // Create new template role for every project
     for (var i in projects) {
-      Array.prototype.push.apply(roles, projectRoles);
+      Array.prototype.push.apply(roles, projectRolesTemplate);
     }
 
+    // Assign permissions to the roles
     var rolePermissions = [];
     var giveRolePermissions = (roleId, permissions) => {
       for (var i in permissions) {
         rolePermissions.push({role_id: roleId, permission_name: permissions[i]});
       }
     }
+
     // Give admin all permissions
     var allPermissions = permissions.asArray().map(it => it.name);
     giveRolePermissions(1, allPermissions);
@@ -966,15 +1018,6 @@ var T = {
     }
     // Give admin user all permissions
     giveUserPermissions(16, allPermissions);
-
-    var projectRoles = [
-      {name: "Developer", description: "Developer"},
-      {name: "Manager", description: "Manager"},
-      {name: "Tester", description: "Tester"}
-    ];
-    for (var i in projects) {
-      Array.prototype.push.apply(roles, projectRoles);
-    }
 
     var projectMembers = [
       // Developers
@@ -1055,6 +1098,27 @@ var T = {
       { user_id: 10,    project_id: 6 },
     ];
 
+    var projectRoles = [
+      { project_id: 1,           role_id: 2,    },
+      { project_id: 1,           role_id: 3,    },
+      { project_id: 1,           role_id: 4,    },
+      { project_id: 2,           role_id: 5,    },
+      { project_id: 2,           role_id: 6,    },
+      { project_id: 2,           role_id: 7,    },
+      { project_id: 3,           role_id: 8,    },
+      { project_id: 3,           role_id: 9,    },
+      { project_id: 3,           role_id: 10,   },
+      { project_id: 4,           role_id: 11,   },
+      { project_id: 4,           role_id: 12,   },
+      { project_id: 4,           role_id: 13,   },
+      { project_id: 5,           role_id: 14,   },
+      { project_id: 5,           role_id: 15,   },
+      { project_id: 5,           role_id: 16,   },
+      { project_id: 6,           role_id: 17,   },
+      { project_id: 6,           role_id: 18,   },
+      { project_id: 6,           role_id: 19,   },
+    ];
+
     var commonIssueTypes = [
       { name: "bug", description: "Bug" },
       { name: "feature_request", description: "Feature request" },
@@ -1126,6 +1190,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.role_permissions.name, rolePermissions));
     // Assign project members
     query = query.then(data => knex.batchInsert(T.project_members.name, projectMembers));
+    // Assign project roles
+    query = query.then(data => knex.batchInsert(T.project_roles.name, projectRoles));
     // Assign project member roles
     query = query.then(data => knex.batchInsert(T.project_member_roles.name, projectMemberRoles));
     // Give users their global permissions
