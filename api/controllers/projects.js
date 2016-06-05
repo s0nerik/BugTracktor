@@ -44,7 +44,7 @@ function updateProject(req, res) {
   });
 
   query = query.then(localProject => {
-    if (!isMember) return data;
+    if (!isMember) return localProject;
     originalProject = localProject;
   })
 
