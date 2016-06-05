@@ -11,7 +11,8 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 
-host: bug-tracktor.herokuapp.com
+host: localhost:10010
+# host: bug-tracktor.herokuapp.com
 basePath: /v1
 schemes:
   - http
@@ -91,6 +92,31 @@ parameters:
     required: false
     type: integer
     format: int32
+  offsetQueryParam:
+    in: query
+    name: offset
+    description: Offset of the returned array's values (used to query less items/enable paging).
+    required: false
+    type: integer
+    format: int32
+  nameQueryParam:
+    in: query
+    name: name
+    description: Name.
+    required: false
+    type: string
+  nicknameQueryParam:
+    in: query
+    name: nickname
+    description: Name.
+    required: false
+    type: string
+  emailQueryParam:
+    in: query
+    name: email
+    description: Email.
+    required: false
+    type: string
   projectIdQueryParam:
     in: query
     name: projectId
@@ -205,6 +231,12 @@ paths:
     get:
       operationId: listUsers
       description: Gets the users registered in the system.
+      parameters:
+        - $ref: "#/parameters/limitQueryParam"
+        - $ref: "#/parameters/offsetQueryParam"
+        - $ref: "#/parameters/nameQueryParam"
+        - $ref: "#/parameters/nicknameQueryParam"
+        - $ref: "#/parameters/emailQueryParam"
       responses:
         200:
           description: Success

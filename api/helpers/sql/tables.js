@@ -174,6 +174,16 @@ var T = {
     },
     new: user => insert_without(T.users, user, ["id"]),
     get: id => get_with_id(T.users, id),
+    get_all: (limit, offset, criteria) => {
+      var query = table(T.users).select();
+      if (criteria)
+        query = query.where(criteria);
+      if (limit)
+        query = query.limit(limit);
+      if (offset)
+        query = query.offset(offset);
+      return query;
+    },
     get_without_password: id => get_with_id(T.users, id).then(data => without_fields(data, ["password"])),
     get_with_email: email => get_with_field_value(T.users, "email", email),
   },

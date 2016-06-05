@@ -6,6 +6,7 @@ module.exports = {
   newUser: newUser,
   getToken: getToken,
   getUserInfo: getUserInfo,
+  listUsers: listUsers,
 };
 
 function newUser(req, res) {
@@ -38,4 +39,40 @@ function getToken(req, res) {
 
 function getUserInfo(req, res) {
   res.json(req.user);
+}
+
+function listUsers(req, res) {
+  var limit = req.swagger.params.limit.value;
+  var offset = req.swagger.params.offset.value;
+  var name = req.swagger.params.name.value;
+  var nickname = req.swagger.params.nickname.value;
+  var email = req.swagger.params.email.value;
+
+  var criteria;
+  if (name || nickname || email) {
+    criteria = function() {
+      var localCriteria;
+      if (name) {
+        localCriteria = this.where('real_name', 'like', "%"+name+"%");
+        if (nickname)
+          localCriteria = localCriteria.orWhere('nickname', 'like', "%"+nickname+"%");
+        if (email)
+          localCriteria = localCriteria.orWhere('email', 'like', "%"+email+"%");
+      } else if (nickname) {
+        localCriteria = this.where('nickname', 'like', "%"+nickname+"%");
+        if (email)
+          localCriteria = localCriteria.orWhere('email', 'like', "%"+email+"%");
+      } else if (email) {
+        localCriteria = this.where('email', 'like', "%"+email+"%");
+      }
+
+      return localCriteria;
+    }
+  }
+
+  T.users.get_all(limit, offset, criteria)
+          .then(data => {
+            console.log("get_all: "+JSON.stringify(data));
+            res.json(data);
+          });
 }
