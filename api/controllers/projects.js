@@ -58,7 +58,7 @@ function updateProject(req, res) {
   query = query.then(data => {
     if (!isMember || !originalProject) return data;
 
-    if (_.isEqual(newMembers, originalMembers)) {
+    if (_.isEqual(newProject.members, originalProject.members)) {
       return data;
     } else {
       var toRemove = _.differenceBy(originalProject.members, newProject.members, x => x.user.id);
