@@ -198,7 +198,20 @@ var T = {
       table.text("full_description");
     },
     new: (userId, project) => insert_without(T.projects, project, ["id", "members", "issues"])
-                                .then(data => T.project_creators.new(userId, data.id).return(data)),
+                                .then(createdProject => T.project_creators.new(userId, createdProject.id).return(createdProject))
+                                .then(createdProject => {
+                                  var roles;
+                                  if (project.roles) {
+                                    roles = project.roles;
+                                  } else {
+                                    roles = require("../role_templates.js");
+                                  }
+                                  var innerQuery = Promise.resolve(createdProject);
+                                  for (let i in roles) {
+                                    innerQuery = innerQuery.then(data => T.project_roles.create_and_add(createdProject.id, roles[i]))
+                                  }
+                                  return innerQuery.then(data => createdProject);
+                                }),
     update: project => update_where_id_no_recurse(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => get_with_id(T.projects, id),
     get_user_projects: user => table(T.projects).select()
@@ -650,6 +663,8 @@ var T = {
 
       table.primary(["project_id", "role_id"]);
     },
+    create_and_add: (projectId, role) =>
+      T.roles.new(role).then(createdRole => table(T.project_roles).insert({project_id: projectId, role_id: createdRole.id})),
     add: (projectId, roleId) => table(T.project_roles).insert({project_id: projectId, role_id: roleId}),
     remove: (projectId, roleId) => table(T.project_roles).where('project_id', projectId).andWhere('role_id', roleId).del(),
     get: projectId => {
@@ -977,11 +992,7 @@ var T = {
     var roles = [{name: "Admin", description: "Steals cables, monitors etc."}];
 
     // Template roles
-    var projectRolesTemplate = [
-      {name: "Developer", description: "Does everything."},
-      {name: "Manager", description: "Works with his mouth."},
-      {name: "Tester", description: "Checks what developer did."}
-    ];
+    var projectRolesTemplate = require("../role_templates.js");
 
     // Create new template role for every project
     for (var i in projects) {
