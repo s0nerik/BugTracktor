@@ -231,13 +231,13 @@ var T = {
       query = query.then(innerProject => project = innerProject);
       // Set issues
       query = query.then(data => T.project_issues.get(projectId, null, true));
-      query = query.then(issues => project.issues = issues);
+      query = query.then(issues => _.set(project, "issues", issues));
       // Set creator
       query = query.then(data => T.project_creators.get_creator_by_project_id(projectId));
-      query = query.then(creator => project.creator = creator);
+      query = query.then(creator => _.set(project, "creator", creator));
       // Set project members
       query = query.then(data => T.project_members.get_members_by_project_id(projectId))
-      query = query.then(members => project.members = members);
+      query = query.then(members => _.set(project, "members", members));
 
       return query.then(data => {
         if (project.id)
@@ -700,7 +700,7 @@ var T = {
                                                                  .andWhere("project_id", projectId)
                                                                  .then(data => {
                                                                    if (data) return true;
-                                                                   else return false;
+                                                                   else return T.project_creators.is_creator(userId, projectId);
                                                                  }),
     get_members_by_project_id: projectId =>
       table(T.users)

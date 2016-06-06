@@ -201,8 +201,7 @@ paths:
     x-swagger-router-controller: projects
     get:
       operationId: listProjects
-      description: |
-        Gets all projects available for a user.
+      description: Gets all projects available for a user.
       responses:
         200:
           description: Success
@@ -212,8 +211,7 @@ paths:
               $ref: "#/definitions/Project"
     post:
       operationId: createProject
-      description: |
-        Creates a new project.
+      description: Creates a new project.
       parameters:
         - in: body
           name: project
