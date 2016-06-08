@@ -353,7 +353,7 @@ var T = {
       table.text("short_description");
       table.text("full_description");
     },
-    new: issue => insert_only(T.issues, issue, ["type_id", "author_id", "short_description", "full_description", "creation_date"]),
+    new: issue => insert_without(T.issues, _.pick(issue, ["type_id", "author_id", "short_description", "full_description", "creation_date"])),
     update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
     get: id => get_with_id(T.issues, id),
     remove: id => remove_with_id(T.issues, id),
