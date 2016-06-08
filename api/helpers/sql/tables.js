@@ -466,6 +466,9 @@ var T = {
                       // Add issue creator to the response.
                       .then(info => T.users.get_without_password(localIssue.author_id))
                       .then(creator => localIssue.author = creator)
+                      // Add issue type to the response.
+                      .then(info => T.issue_types.get(localIssue.type_id))
+                      .then(type => localIssue.type = type)
                       // Add issue assignees to the response.
                       .then(info => T.issue_assignments.get_assignees_for_issue_id(localIssue.id))
                       .then(assignees => localIssue.assignees = assignees)
@@ -498,6 +501,16 @@ var T = {
           }
           return localQuery;
         });
+        // Add issue type for every issue.
+        query = query.then(data => {
+          var localQuery = Promise.resolve(true);
+          for (var i in issues) {
+            let localIssue = issues[i];
+            localQuery = localQuery.then(info => T.issue_types.get(localIssue.type_id))
+                                   .then(type => localIssue.type = type);
+          }
+          return localQuery;
+        });
         // Set issue attachments for every issue
         query = query.then(data => {
           var localQuery = Promise.resolve(true);
@@ -519,6 +532,7 @@ var T = {
             _.union(
               issueFields,
               _.without(T.users.fields, "password"),
+              T.issue_types.fields,
               T.issue_assignments.fields,
               T.issue_attachments.fields,
               ["issue_index", "attachments", "assignees", "author", "project"]
@@ -1141,14 +1155,21 @@ var T = {
     ];
 
     var commonIssueTypes = [
-      { name: "bug", description: "Bug" },
-      { name: "feature_request", description: "Feature request" },
-      { name: "proposal", description: "Proposal" },
-      { name: "question", description: "Question" },
+      { name: "bug",                description: "Bug"                },
+      { name: "feature_request",    description: "Feature request"    },
+      { name: "proposal",           description: "Proposal"           },
+      { name: "question",           description: "Question"           },
     ]
     var issueTypes = []
     for (var i in projects) {
       Array.prototype.push.apply(issueTypes, commonIssueTypes);
+    }
+
+    var projectIssueTypes = []
+    for (var i = 1; i <= projects.length; i++) {
+      for (var j = 1; j <= commonIssueTypes.length; j++) {
+        projectIssueTypes.push({ project_id: i, issue_type_id: j });
+      }
     }
 
     var testIssuesCnt = 10;
@@ -1221,6 +1242,8 @@ var T = {
     query = query.then(data => knex.batchInsert(T.project_creators.name, projectCreators));
     // Create issue types
     query = query.then(data => knex.batchInsert(T.issue_types.name, issueTypes));
+    // Assing project issue types
+    query = query.then(data => knex.batchInsert(T.project_issue_types.name, projectIssueTypes));
     // Create issues
     query = query.then(data => knex.batchInsert(T.issues.name, issues));
     // Assign issues to their assignees

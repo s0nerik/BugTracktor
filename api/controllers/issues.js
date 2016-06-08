@@ -46,19 +46,31 @@ function getIssue(req, res) {
 
 function createIssue(req, res) {
   req.swagger.params.issue.value.author_id = req.user.id;
-  T.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
-                  // Add project the issue belongs to.
-                  .then(issue => {
-                    issue.project = { id: req.swagger.params.projectId.value };
-                    return issue;
-                  })
-                  .then(issue => res.json(issue));
+  if (_.get(req.swagger.params.issue.value, "type.id")) {
+    req.swagger.params.issue.value.type_id = req.swagger.params.issue.value.type.id;
+    T.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
+                    // Add project the issue belongs to.
+                    .then(issue => {
+                      issue.project = { id: req.swagger.params.projectId.value };
+                      return issue;
+                    })
+                    .then(issue => res.json(issue));
+  } else {
+    res.status(400).json({message: "You must provide an issue type."});
+  }
+
 }
 
 function updateIssue(req, res) {
   var projectId = req.swagger.params.projectId.value;
   var issueIndex = req.swagger.params.issueIndex.value;
   var newIssue = req.swagger.params.issue.value;
+  if (_.get(newIssue, "type.id")) {
+    newIssue.type_id = newIssue.type.id;
+  } else {
+    res.status(400).json({message: "You must provide an issue type."});
+    return;
+  }
 
   var issueNotFound = false;
 
