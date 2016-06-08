@@ -211,6 +211,15 @@ var T = {
                                     innerQuery = innerQuery.then(data => T.project_roles.create_and_add(createdProject.id, roles[i]))
                                   }
                                   return innerQuery.then(data => createdProject);
+                                })
+                                .then(createdProject => {
+                                  var issueTypes = require("../issue_types_template");
+                                  var innerQuery = Promise.resolve(createdProject);
+                                  for (let i in issueTypes) {
+                                    innerQuery = innerQuery.then(data => T.issue_types.new(issueTypes[i]))
+                                                           .then(issueType => T.project_issue_types.new(createdProject.id, issueType.id));
+                                  }
+                                  return innerQuery.then(data => createdProject);
                                 }),
     update: project => update_where_id_no_recurse(T.projects, project, ["name", "short_description", "full_description"]),
     get: id => get_with_id(T.projects, id),
@@ -432,28 +441,46 @@ var T = {
 
       table.primary(["project_id", "issue_id"]);
     },
-    new: (projectId, issue) =>
+    new: (projectId, issue) => {
+      var newIssueId;
+      var newIssueIndex;
       // Create issue
-      T.issues.new(issue)
-      // Select last issue index inside a given project
-      .then(createdIssue =>
-        knex(T.project_issues.name)
-        .select(knex.raw('count(*) as cnt'))
-        .where('project_id', projectId)
-        .then(indexQueryResult => {
-          var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
-          return [createdIssue, lastProjectIssueIndex+1];
-        })
-      )
-      // Insert new ProjectIssue and return an original issue
-      .then(args => table(T.project_issues)
-                    .insert({
-                      project_id: projectId,
-                      issue_id: args[0].id,
-                      issue_index: args[1]
+      var query = T.issues.new(issue)
+                    // Select last issue index inside a given project
+                    .then(createdIssue => {
+                      newIssueId = createdIssue.id;
+                      return knex(T.project_issues.name)
+                                .select(knex.raw('count(*) as cnt'))
+                                .where('project_id', projectId)
+                                .then(indexQueryResult => {
+                                  var lastProjectIssueIndex = isNaN(indexQueryResult[0].cnt) ? 0 : parseInt(indexQueryResult[0].cnt);
+                                  newIssueIndex = lastProjectIssueIndex+1;
+                                  return [createdIssue, lastProjectIssueIndex+1];
+                                })
                     })
-                    .then(data => T.project_issues.get(projectId, args[1]))
-      ),
+                    // Insert new ProjectIssue and return an original issue
+                    .then(args => table(T.project_issues)
+                                  .insert({
+                                    project_id: projectId,
+                                    issue_id: args[0].id,
+                                    issue_index: args[1]
+                                  }));
+                                  // .then(data => T.project_issues.get(projectId, args[1]))
+      query = query.then(data => {
+        var localPromise = Promise.resolve(true);
+        for (var i in issue.assignees) {
+          let add = issue.assignees[i];
+          localPromise = localPromise.then(x => T.issue_assignments.assign(newIssueId, add.id));
+        }
+        for (var i in issue.attachments) {
+          let add = issue.attachments[i];
+          localPromise = localPromise.then(x => T.issue_attachments.new(newIssueId, add.url));
+        }
+        return localPromise;
+      });
+
+      return query.then(data => T.project_issues.get(projectId, newIssueIndex));
+    },
     get: (projectId, issueIndex, withoutFullDescription) => { // projectId -> NotNull
       var where = issueIndex ? { issue_index: issueIndex, project_id: projectId } : { project_id: projectId };
       var query = table(T.project_issues).select().where(where).innerJoin(T.issues.name, "project_issues.issue_id", "issues.id");
@@ -1154,12 +1181,8 @@ var T = {
       { project_id: 6,           role_id: 19,   },
     ];
 
-    var commonIssueTypes = [
-      { name: "bug",                description: "Bug"                },
-      { name: "feature_request",    description: "Feature request"    },
-      { name: "proposal",           description: "Proposal"           },
-      { name: "question",           description: "Question"           },
-    ]
+    var commonIssueTypes = require("../issue_types_template");
+
     var issueTypes = []
     for (var i in projects) {
       Array.prototype.push.apply(issueTypes, commonIssueTypes);

@@ -46,6 +46,7 @@ function getIssue(req, res) {
 
 function createIssue(req, res) {
   req.swagger.params.issue.value.author_id = req.user.id;
+  req.swagger.params.issue.value.creation_date = new Date();
   if (_.get(req.swagger.params.issue.value, "type.id")) {
     req.swagger.params.issue.value.type_id = req.swagger.params.issue.value.type.id;
     T.project_issues.new(req.swagger.params.projectId.value, req.swagger.params.issue.value)
