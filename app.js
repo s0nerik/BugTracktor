@@ -67,6 +67,10 @@ var config = {
   }
 };
 
+Date.prototype.asString = function() {
+  return this.toISOString().replace("T", " ");
+}
+
 SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (err) { throw err; }
 
@@ -74,7 +78,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
     function updateObject(obj) {
       for (var i in obj) {
         if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
-          obj[i] = new Date(obj[i]).toISOString().replace("T", " ");
+          obj[i] = new Date(obj[i]).asString();
         } else if (i.indexOf("password") > -1) {
           delete obj[i];
         } else if (obj[i] instanceof Object) {
