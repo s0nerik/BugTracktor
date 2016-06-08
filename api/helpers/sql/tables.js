@@ -253,7 +253,7 @@ var T = {
       query = query.then(members => _.set(project, "members", members));
 
       return query.then(data => {
-        if (project.id)
+        if (_.get(project, "id"))
           return project;
         else
           return undefined;
@@ -709,6 +709,16 @@ var T = {
       table.primary(["user_id", "project_id"]);
     },
     make_member: (userId, projectId) => table(T.project_members).insert({user_id: userId, project_id: projectId}),
+    make_member_with_roles: (userId, projectId, roles) =>
+      table(T.project_members).insert({user_id: userId, project_id: projectId})
+                              .then(member => {
+                                var localPromise = Promise.resolve(true);
+                                for (var j in roles) {
+                                  let role = roles[j];
+                                  localPromise = localPromise.then(x => T.project_member_roles.give_role(userId, projectId, role.id));
+                                }
+                                return localPromise;
+                              }),
     deny_member: (userId, projectId) => table(T.project_members).where('user_id', userId).andWhere('project_id', projectId).del(),
     check_member: (userId, projectId) => table(T.project_members).first()
                                                                  .where("user_id", userId)

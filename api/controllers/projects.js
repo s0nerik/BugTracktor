@@ -22,7 +22,7 @@ function getProject(req, res) {
   T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
             .then(project => {
               if (project) res.json(project);
-              else res.json(404, {message: "Not found"});
+              else res.status(404).json({message: "Project not found."});
             });
 }
 
@@ -74,7 +74,7 @@ function updateProject(req, res) {
       if (toAdd) {
         for (var i in toAdd) {
           let add = toAdd[i];
-          localPromise = localPromise.then(x => T.project_members.make_member(add.user.id, newProject.id));
+          localPromise = localPromise.then(x => T.project_members.make_member_with_roles(add.user.id, newProject.id, add.roles));
         }
       }
       return localPromise;
