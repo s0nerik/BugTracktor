@@ -552,6 +552,9 @@ var T = {
         query = query.then(data => issues);
       }
       return query.then(data => {
+        console.log("---------------------------");
+        console.log(JSON.stringify(data));
+        console.log("---------------------------");
         var issueFields = withoutFullDescription ? _.without(T.issues.fields, "full_description") : T.issues.fields;
         return without_nulls(
           take_fields(
