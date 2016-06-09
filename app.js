@@ -80,6 +80,8 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
       for (var i in obj) {
         if (i.startsWith("date") || i.endsWith("_date") || i.indexOf("_date_") > -1) {
           obj[i] = new Date(obj[i]).asString();
+        } else if (i.startsWith("is_")) {
+          obj[i] = Boolean(obj[i]);
         } else if (i.indexOf("password") > -1) {
           delete obj[i];
         } else if (obj[i] instanceof Object) {

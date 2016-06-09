@@ -182,7 +182,7 @@ var T = {
         query = query.limit(limit);
       if (offset)
         query = query.offset(offset);
-      return query;
+      return query.then(data => without_nulls(data));
     },
     get_without_password: id => get_with_id(T.users, id).then(data => without_fields(data, ["password"])),
     get_with_email: email => get_with_field_value(T.users, "email", email),
@@ -341,7 +341,7 @@ var T = {
   },
   issues: {
     name: "issues",
-    fields: ["id", "type_id", "author_id", "short_description", "full_description", "creation_date"],
+    fields: ["id", "type_id", "author_id", "is_opened", "is_active", "short_description", "full_description", "creation_date"],
     foreignFields: ["project", "type", "history", "attachments"],
     init: table => {
       table.increments("id");
@@ -361,9 +361,11 @@ var T = {
       table.dateTime("creation_date");
       table.text("short_description");
       table.text("full_description");
+      table.boolean("is_opened");
+      table.boolean("is_active");
     },
-    new: issue => insert_without(T.issues, _.pick(issue, ["type_id", "author_id", "short_description", "full_description", "creation_date"])),
-    update: issue => update_where_id(T.issues, issue, ["type_id", "short_description", "full_description", "creation_date"]),
+    new: issue => insert_without(T.issues, _.pick(issue, _.without(T.issues.fields, "id"))),
+    update: issue => update_where_id(T.issues, issue, _.without(T.issues.fields, "id", "author_id")),
     get: id => get_with_id(T.issues, id),
     remove: id => remove_with_id(T.issues, id),
   },
@@ -552,9 +554,6 @@ var T = {
         query = query.then(data => issues);
       }
       return query.then(data => {
-        console.log("---------------------------");
-        console.log(JSON.stringify(data));
-        console.log("---------------------------");
         var issueFields = withoutFullDescription ? _.without(T.issues.fields, "full_description") : T.issues.fields;
         return without_nulls(
           take_fields(
@@ -579,7 +578,7 @@ var T = {
                                           .where("project_id", projectId)
                                           .andWhere("issue_index", issueIndex);
                                     })
-                                    .update(take_fields_no_recurse(issue, ["type_id", "short_description", "full_description", "creation_date"]))
+                                    .update(take_fields_no_recurse(issue, _.without(T.issues.fields, "id", "author_id")))
                                     // .update(take_fields(issue, ["type_id", "short_description", "full_description", "creation_date"]))
                                     .then(data => T.project_issues.get(projectId, issueIndex)),
   },
@@ -1011,9 +1010,9 @@ var T = {
 
     var projects = [
       {
-        name: "DNO Project",
-        short_description: "An application for doing everything possible on Earth.",
-        full_description: "A project where everything that is possible will be implemented for a budget of $50."
+        name: "Dead By April",
+        short_description: "Dead by April is a Swedish Metal band from Gothenburg.",
+        full_description: "The current band lineup consists of Hjelm (vocals/guitar/keys), Christoffer \"Stoffe\" Andersson (screamed vocals), Marcus Wesslén (bass) and Marcus Rosell (drums). They released their self-titled debut album in May 2009. Despite many line up changes throughout their career, both bassist Marcus Wesslén and lead guitarist/current clean vocalist Pontus Hjelm have remained consistent since their debut album."
       },
       {
         name: "Metallica",
@@ -1207,7 +1206,9 @@ var T = {
           author_id: i % 10 + 6,
           short_description: "Test issue (id: "+i+")",
           full_description: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of \"de Finibus Bonorum et Malorum\" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, \"Lorem ipsum dolor sit amet..\", comes from a line in section 1.10.32.",
-          creation_date: randomDate(new Date(2012, 0, 1), new Date()).asString()
+          creation_date: randomDate(new Date(2012, 0, 1), new Date()),
+          is_opened: !(Math.random()+.5|0),
+          is_active: !(Math.random()+.5|0),
         }
       );
     }
