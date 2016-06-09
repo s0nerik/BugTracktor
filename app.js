@@ -88,6 +88,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
           updateObject(obj[i]);
         }
       }
+      obj = _.omitBy(obj, _.isNil);
     }
     function redact(body, req, res) {
       updateObject(body);
