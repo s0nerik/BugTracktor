@@ -72,7 +72,7 @@ function listUsers(req, res) {
 
   T.users.get_all(limit, offset, criteria)
           .then(data => {
-            console.log("get_all: "+JSON.stringify(data));
+            // console.log("get_all: "+JSON.stringify(data));
             res.json(data);
           });
 }
