@@ -962,7 +962,7 @@ var T = {
     var query = Promise.resolve(true);
     if (process.env.DEV) {
       query = query.then(data => knex.schema.raw("PRAGMA foreign_keys = OFF"));
-    } else {
+    } else if (process.env.JAWSDB_URL || process.env.JAWSDB_MARIA_URL) {
       query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 0"));
     }
     for (var key in T) {
@@ -973,7 +973,7 @@ var T = {
     }
     if (process.env.DEV) {
       query = query.then(data => knex.schema.raw("PRAGMA foreign_keys = ON"));
-    } else {
+    } else if (process.env.JAWSDB_URL || process.env.JAWSDB_MARIA_URL) {
       query = query.then(data => knex.schema.raw("SET FOREIGN_KEY_CHECKS = 1"));
     }
     return query;
