@@ -68,7 +68,8 @@ var config = {
 };
 
 Date.prototype.asString = function() {
-  return this.toISOString().replace("T", " ");
+  return this.toISOString();
+  // return this.toISOString().replace("T", " ");
 }
 
 SwaggerExpress.create(config, function(err, swaggerExpress) {
