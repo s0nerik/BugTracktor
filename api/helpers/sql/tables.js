@@ -611,22 +611,8 @@ var T = {
       var permissions = require('./permissions');
       return table(T.permissions).insert(permissions.asArray());
     },
-    get_by_token: (token, projectId) =>
-      table(T.role_permissions)
-        .distinct("permission_name")
-        .innerJoin(T.tokens.name, T.tokens.name+".token", knex.raw('?', [token]))
-        .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", T.tokens.name+".user_id")
-                                                                  .andOn(T.project_member_roles.name+".project_id", knex.raw('?', [projectId]))})
-        .union(function() {
-          this.distinct("permission_name")
-              .from(T.user_permissions.name)
-              .where("user_id", function() {
-                this.select("user_id")
-                    .from(T.tokens.name)
-                    .where("token", knex.raw('?', [token]))
-              })
-        })
-        .then(data => without_nulls(to_array_of_values(data))),
+    get_by_token: (token, projectId) =>T.tokens.get_user_id_by_token(token)
+                                               .then(userId => T.permissions.get_by_user_id_and_project(userId, projectId)),
     get_by_user_id_and_project: (userId, projectId) => {
       if (projectId) {
         return table(T.project_member_roles)
@@ -927,6 +913,8 @@ var T = {
                                                      .andOn("tokens.token", knex.raw('?', [token]))
                                                })
                                               .then(data => without_nulls(take_fields(data, T.users.fields))),
+    get_user_id_by_token: token => table(T.tokens).first("user_id")
+                                                  .where("token", token),
     check_valid: token => table(T.tokens).first()
                                          .where("token", token)
                                          .then(tokenData => {

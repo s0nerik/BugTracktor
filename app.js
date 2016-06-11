@@ -46,7 +46,7 @@ var config = {
       query = query.then(data => tables.tokens.get_user_by_token(scopesOrApiKey))
                    .then(user => req.user = user);
 
-      if (req.swagger.params && req.swagger.params.projectId) {
+      if (_.get(req.swagger.params, "projectId.value")) {
         query = query.then(data => tables.permissions.get_by_token(scopesOrApiKey, req.swagger.params.projectId.value));
       } else {
         query = query.then(data => tables.permissions.get_by_token(scopesOrApiKey, 0));
