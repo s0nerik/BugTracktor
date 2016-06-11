@@ -17,16 +17,16 @@ module.exports = app; // for testing
 
 expressWinston.requestWhitelist.push('body');
 expressWinston.responseWhitelist.push('body');
-app.use(expressWinston.logger({
-  transports: [
-    new winston.transports.Console({
-      json: true,
-      colorize: true
-    })
-  ],
-  // requestFilter: function (req, propName) { return _.get(req, propName); },
-  // responseFilter: function (res, propName) { return _.get(res, propName); }
-}));
+// app.use(expressWinston.logger({
+//   transports: [
+//     new winston.transports.Console({
+//       json: true,
+//       colorize: true
+//     })
+//   ],
+//   // requestFilter: function (req, propName) { return _.get(req, propName); },
+//   // responseFilter: function (res, propName) { return _.get(res, propName); }
+// }));
 
 var containsAll = function (original, array) {
   return array.every(function(v,i) {
@@ -112,7 +112,7 @@ if (process.env.DEV) {
       filename: "./db.sqlite"
     },
     // useNullAsDefault: true,
-    debug: true
+    // debug: true
   });
 } else if (process.env.JAWSDB_URL) {
   global.knex = require('knex')({

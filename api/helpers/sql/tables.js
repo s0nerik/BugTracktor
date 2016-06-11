@@ -629,10 +629,11 @@ var T = {
         .then(data => without_nulls(to_array_of_values(data))),
     get_by_user_id_and_project: (userId, projectId) => {
       if (projectId) {
-        return table(T.role_permissions)
+        return table(T.project_member_roles)
           .distinct("permission_name")
-          .innerJoin(T.project_member_roles.name, function () {this.on(T.project_member_roles.name+".user_id", knex.raw('?', [userId]))
-                                                                   .andOn(T.project_member_roles.name+".project_id", knex.raw('?', [projectId]))})
+          .innerJoin(T.role_permissions.name, T.role_permissions.name+".role_id", T.project_member_roles.name+".role_id")
+          .where("user_id", userId)
+          .andWhere("project_id", projectId)
           .union(function() {
             this.distinct("permission_name")
                 .from(T.user_permissions.name)
@@ -933,7 +934,7 @@ var T = {
                                              var lastUpdatedDate = new Date(tokenData.updated_at);
                                              var currentDate = new Date();
                                              var diffHours = parseInt((currentDate - lastUpdatedDate) / (1000 * 60 * 60));
-                                             console.log("diffHours: "+diffHours);
+                                            //  console.log("diffHours: "+diffHours);
                                              // If difference is more than 6 hours - token is invalid
                                              return diffHours < 6;
                                            } else {
