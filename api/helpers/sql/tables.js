@@ -255,7 +255,7 @@ var T = {
       query = query.then(data => T.project_issues.get(projectId, null, true));
       query = query.then(issues => {
         _.set(project, "issues", issues)
-        console.log("Issues:\n"+JSON.stringify(issues))
+        // console.log("Issues:\n"+JSON.stringify(issues))
         return issues;
       });
       // query = query.then(issues => _.set(project, "issues", issues));
@@ -559,23 +559,8 @@ var T = {
         query = query.then(data => issues);
       }
       return query.then(data => {
-        // console.log("Issues:\n"+JSON.stringify(data))
-        var issueFields = withoutFullDescription ? _.without(T.issues.fields, "full_description") : T.issues.fields;
-        return without_nulls(
-          data,
-          // take_fields(
-          //   data,
-          //   _.union(
-          //     issueFields,
-          //     _.without(T.users.fields, "password"),
-          //     T.issue_types.fields,
-          //     T.issue_assignments.fields,
-          //     T.issue_attachments.fields,
-          //     ["issue_index", "attachments", "assignees", "author", "project"]
-          //   )
-          // ),
-          true
-        );
+        var omitted = withoutFullDescription ? ["full_description"] : [];
+        return without_nulls(_.omit(data, omitted), true);
       });
     },
     update: (projectId, issueIndex, issue) => table(T.issues)
