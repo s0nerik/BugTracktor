@@ -15,18 +15,41 @@ var interceptor = require('express-interceptor');
 
 module.exports = app; // for testing
 
-// expressWinston.requestWhitelist.push('body');
-// expressWinston.responseWhitelist.push('body');
-// app.use(expressWinston.logger({
-//   transports: [
-//     new winston.transports.Console({
-//       json: true,
-//       colorize: true
-//     })
-//   ],
-//   // requestFilter: function (req, propName) { return _.get(req, propName); },
-//   // responseFilter: function (res, propName) { return _.get(res, propName); }
-// }));
+_.mixin({
+    nestedOmit: function(obj, iteratee, context) {
+        var r = _.omit(obj, iteratee, context);
+
+        _.each(r, function(val, key) {
+            if (typeof(val) === "object")
+                r[key] = _.nestedOmit(val, iteratee, context);
+        });
+
+        return r;
+    },
+    nestedOmitBy: function(obj, predicate, context) {
+        var r = _.omitBy(obj, predicate, context);
+
+        _.each(r, function(val, key) {
+            if (typeof(val) === "object")
+                r[key] = _.nestedOmitBy(val, predicate, context);
+        });
+
+        return r;
+    }
+});
+
+expressWinston.requestWhitelist.push('body');
+expressWinston.responseWhitelist.push('body');
+app.use(expressWinston.logger({
+  transports: [
+    new winston.transports.Console({
+      json: true,
+      colorize: true
+    })
+  ],
+  // requestFilter: function (req, propName) { return _.get(req, propName); },
+  // responseFilter: function (res, propName) { return _.get(res, propName); }
+}));
 
 var containsAll = function (original, array) {
   return array.every(function(v,i) {
@@ -88,7 +111,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
           updateObject(obj[i]);
         }
       }
-      obj = _.omitBy(obj, _.isNil);
+      obj = _.nestedOmitBy(obj, _.isNil);
     }
     function redact(body, req, res) {
       updateObject(body);

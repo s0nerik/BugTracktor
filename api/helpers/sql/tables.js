@@ -560,7 +560,11 @@ var T = {
       }
       return query.then(data => {
         var omitted = withoutFullDescription ? ["full_description"] : [];
-        return without_nulls(_.omit(data, omitted), true);
+        if (issueIndex) {
+          return _.omit(data, omitted);
+        } else {
+          return _.map(data, it => _.omit(it, omitted));
+        }
       });
     },
     update: (projectId, issueIndex, issue) => table(T.issues)
