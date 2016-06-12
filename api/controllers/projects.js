@@ -21,6 +21,7 @@ function listProjects(req, res) {
 function getProject(req, res) {
   T.projects.get_user_project_by_id(req.user, req.swagger.params.projectId.value)
             .then(project => {
+              console.log("Project:\n"+JSON.stringify(project))
               if (project) res.json(project);
               else res.status(404).json({message: "Project not found."});
             });
