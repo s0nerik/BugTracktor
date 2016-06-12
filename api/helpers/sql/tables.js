@@ -562,17 +562,18 @@ var T = {
         // console.log("Issues:\n"+JSON.stringify(data))
         var issueFields = withoutFullDescription ? _.without(T.issues.fields, "full_description") : T.issues.fields;
         return without_nulls(
-          take_fields(
-            data,
-            _.union(
-              issueFields,
-              _.without(T.users.fields, "password"),
-              T.issue_types.fields,
-              T.issue_assignments.fields,
-              T.issue_attachments.fields,
-              ["issue_index", "attachments", "assignees", "author", "project"]
-            )
-          ),
+          data,
+          // take_fields(
+          //   data,
+          //   _.union(
+          //     issueFields,
+          //     _.without(T.users.fields, "password"),
+          //     T.issue_types.fields,
+          //     T.issue_assignments.fields,
+          //     T.issue_attachments.fields,
+          //     ["issue_index", "attachments", "assignees", "author", "project"]
+          //   )
+          // ),
           true
         );
       });
