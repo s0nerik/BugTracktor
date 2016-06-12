@@ -255,7 +255,7 @@ var T = {
       query = query.then(data => T.project_issues.get(projectId, null, true));
       query = query.then(issues => {
         _.set(project, "issues", issues)
-        console.log("Issues:\n"+JSON.sstringify(issues))
+        console.log("Issues:\n"+JSON.stringify(issues))
         return issues;
       });
       // query = query.then(issues => _.set(project, "issues", issues));
