@@ -17,6 +17,10 @@ module.exports = {
     request_method: "PUT",
     request_url: ""
   },
+  delete_project: {
+    request_method: "DELETE",
+    request_url: ""
+  },
   list_issues: {
     request_method: "GET",
     request_url: ""
@@ -38,14 +42,6 @@ module.exports = {
     request_url: ""
   },
   close_issue: {
-    request_method: "POST",
-    request_url: ""
-  },
-  create_project: {
-    request_method: "POST",
-    request_url: ""
-  },
-  delete_project: {
     request_method: "DELETE",
     request_url: ""
   },

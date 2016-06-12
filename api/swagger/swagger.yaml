@@ -345,6 +345,14 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/Issue"
+    delete:
+      operationId: closeIssue
+      description: Marks the issue as closed.
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/Issue"
   /projects/{projectId}/issues/{issueIndex}/changes:
     x-swagger-router-controller: issues
     parameters:
