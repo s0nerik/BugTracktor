@@ -253,7 +253,12 @@ var T = {
       query = query.then(innerProject => project = innerProject);
       // Set issues
       query = query.then(data => T.project_issues.get(projectId, null, true));
-      query = query.then(issues => _.set(project, "issues", issues));
+      query = query.then(issues => {
+        _.set(project, "issues", issues)
+        console.log("Issues:\n"+JSON.sstringify(issues))
+        return issues;
+      });
+      // query = query.then(issues => _.set(project, "issues", issues));
       // Set creator
       query = query.then(data => T.project_creators.get_creator_by_project_id(projectId));
       query = query.then(creator => _.set(project, "creator", creator));
